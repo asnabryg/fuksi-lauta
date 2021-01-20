@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Etusivu{% endblock %}
+{% block content %}
+
+<h2>Error</h2>
+<p>
+    {{ error_type }}<br>
+    
+    {% if error_message != None %}
+        {{ error_message }}
+    {% endif %}
+</p>
+<p>
+    Palaa <a href={{page}}>takaisin</a>
+    tai <a href="/">Etusivulle</a>
+</p>
+
+{% endblock %}
