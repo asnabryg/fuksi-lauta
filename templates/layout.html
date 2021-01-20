@@ -1,9 +1,16 @@
 <title>Keskustelupalvelu - {% block title %}{% endblock %}</title>
 <h1>Keskustelupalvelu</h1>
 <a href="/">Etusivu</a>
-{% if "user_id" not in session %}
+{% if "user" not in session %}
     <a href="/login">Kirjaudu</a>
-    <a href="/register">Rekistöröidy</a>
+    <a href="/register">Rekisteröidy</a>
+{% else %}
+    <a href="/profile/{{session['user']}}">Profiili</a>
+    <a href="/logout">Kirjaudu ulos</a>
+    <br>
+    <p>
+        Olet kirjautunut käyttäjällä {{session["user"]}}
+    </p>
 {% endif %}
 <hr>
 {% block content %}{% endblock %}
@@ -11,3 +18,5 @@
 {% if session["visit_info"][1] != None %}
 Kävit viimeksi sivustolla {{session["visit_info"][1].strftime("%Y-%m-%d %H:%M:%S")}}
 {% endif %}
+<br>
+Kirjautuneita käyttäjiä paikalla: {{session["online_count"]}}

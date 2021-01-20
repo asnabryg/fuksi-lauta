@@ -9,18 +9,17 @@ from db import db
 import user
 
 
-
 @app.route("/")
 def index():
     # palauttaa ajan milloin viimeksi kävit tällä laitteella sivustolla
-    check_ip()
+    check_info()
     return render_template("index.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    check_ip()
-    if "user_id" in session:
+    check_info()
+    if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta kirjautumis sivulle.
         return redirect("/")
     if request.method == "GET":
@@ -32,12 +31,18 @@ def login():
             return redirect("/")
         else:
             return render_template("login.html", loginFail=True)
-
+            
+@app.route("/logout")
+def logout():
+    check_info()
+    user.updateOnlineStatus(session["user"], 0) #offline
+    del session["user"]
+    return redirect("/")
 
 @app.route("/register", methods=["GET", "POST"])
 def register():
-    check_ip()
-    if "user_id" in session:
+    check_info()
+    if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta rekistöytymis sivulle.
         return redirect("/")
     if request.method == "GET":
@@ -56,7 +61,44 @@ def register():
             return render_template("error.html", page="/register", error_type="Rekisteröinti ei onnistunut :(", error_message=check[1])
 
 
-def check_ip():
+
+@app.route("/profile/<username>", methods=["GET", "POST"])
+def profile(username):
+    check_info()
+    if request.method == "GET":
+        return render_template("profile.html", passUpdated=False)
+    else:
+        #Jos vaihtaa salasanan
+        password1 = request.form["password1"]
+        password2 = request.form["password2"]
+        old_password = request.form["old_password"]
+        check = user.checkPassword(password1, password2)
+        print("check:", check)
+        if check:
+            if user.login(session["user"], old_password, check=True):
+                # jos vanha salasana täsmää -> vaihdetaan salasana
+                if not user.update_password(session["user"], password1):
+                    # tallentaa uuden salasanan if lausessa ja palauttaa booleanin, että onnistuiko
+                    return render_template(
+                        "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Salasanan vahdossa ilmeni ongelmia. Yritä uudelleen.")
+                else:
+                    # vaihto onnisui
+                    return render_template("profile.html", passUpdated=True)
+            else:
+                return render_template(
+                    "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Vanha salasana oli väärin.")
+        else:
+            return render_template(
+                "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Uusi salasana ei täyttänyt suosituksia")
+
+def check_info():
+    # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
+    # Tarkistaa ip_osoitteen ja päivittää sen kävijöihin hashattuna, jos uusi kävijä
+    # Tarkistaa milloin viimeksi käyty sivulla
+    # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
+
+    session["online_count"] = user.getOnlineUsersCount()
+    
     if "visit_info" not in session:
         sql = "SELECT COUNT(*) from Visitors"
         visit_count = db.session.execute(sql).fetchone()[0]

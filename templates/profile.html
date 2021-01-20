@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block title %}Etusivu{% endblock %}
+{% block content %}
+<h2>Profiili</h2>
+<p>
+    Käyttäjätunnus: {{session["user"]}}
+</p>
+<form action="/profile/{{session['user']}}" method="POST" onsubmit="return checkPassword(this)">
+    <p>
+        <h3>Vaihda salasana:</h3>
+        Uusi salasana:<br>
+        <input type="password" name="password1">
+        Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
+    </p>
+    <p>
+        Salasana uudelleen:<br>
+        <input type="password" name="password2">
+    </p>
+    <p>
+        Vanha salasana:<br>
+        <input type="password" name="old_password">
+    <p>
+        <input type="submit" value="Vaihda">
+        <br>
+        {% if passUpdated %}
+        <span style="color:green">Salasanan vaihto onnistui!</span>
+        {% endif %}
+</form>
+<script>
+    function checkPassword(form) {
+        if (form.password1.value != form.password2.value) {
+            alert("Salasanat eivät täsmää!")
+            return false;
+        }
+        if (!(/\d/.test(form.password1.value))) {
+            alert("Salasanan pitää sisältää vähintään yksi numero!")
+            return false;
+        }
+        if (form.password1.value.length < 8) {
+            alert("Salasana on liian lyhyt!")
+            return false;
+        }
+        return true;
+    }
+</script>
+{% endblock %}

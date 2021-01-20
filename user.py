@@ -1,20 +1,45 @@
+from os import stat
 import re
 from flask.globals import session
 from werkzeug.security import check_password_hash, generate_password_hash
 from db import db
 
 
-def login(username, password):
-    sql ="SELECT id, password FROM Users WHERE username=:username"
+def login(username, password, check=False):
+    sql ="SELECT username, password FROM Users WHERE username=:username"
     user = db.session.execute(sql, {"username":username}).fetchone()
     if user == None:
         return False
     else:
         if check_password_hash(user[1], password):
-            session["user_id"] = user[0]
+            if not check:
+                # Jos vain halutaan tarkastaa nimen ja salasanan oikeellisuus. Default = False
+                session["user"] = user[0]
+                updateOnlineStatus(username, 1)
             return True
         else:
             return False
+
+def updateOnlineStatus(username, status: int):
+    # päivittää käyttäjän online tilaa, 0: Offline, 1:Online
+    sql = "UPDATE Users SET online=:s WHERE username=:username"
+    db.session.execute(sql, {"s": status, "username": username})
+    db.session.commit()
+
+def getOnlineUsersCount():
+    sql = "SELECT COUNT(*) FROM Users WHERE online=1"
+    return db.session.execute(sql).fetchone()[0]
+
+def update_password(username, new_password):
+    hash_password = generate_password_hash(new_password)
+    try:
+        sql = "UPDATE Users SET password=:hash_password WHERE username=:username"
+        db.session.execute(sql, {"hash_password":hash_password, "username":username})
+        db.session.commit()
+        # salasanan vaihto onnistui
+        return True
+    except:
+        return False
 
 def register(username, password1, password2):
     if not checkPassword(password1, password2):
@@ -23,9 +48,9 @@ def register(username, password1, password2):
         return (False, "Käyttäjä tunnus oli jo käytössä.")
     hash_pass = generate_password_hash(password1)
     try:
-        sql = "INSERT INTO Users (username, password, admin) VALUES (:username, :password, :admin)"
+        sql = "INSERT INTO Users (username, password, admin, online) VALUES (:username, :password, :admin, :online)"
         db.session.execute(
-            sql, {"username": username, "password": hash_pass, "admin": 0})
+            sql, {"username": username, "password": hash_pass, "admin": 0, "online": 0})
         db.session.commit()
     except:
         return (False, "Tuntematon virhe. Yritä myöhemmin uudelleen.")
