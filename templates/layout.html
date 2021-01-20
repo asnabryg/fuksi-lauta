@@ -1,11 +1,13 @@
 <title>Keskustelupalvelu - {% block title %}{% endblock %}</title>
 <h1>Keskustelupalvelu</h1>
 <a href="/">Etusivu</a>
-<a href="/">Kirjaudu</a>
-<a href="/">Rekistöröidy</a>
+{% if "user_id" not in session %}
+    <a href="/login">Kirjaudu</a>
+    <a href="/register">Rekistöröidy</a>
+{% endif %}
 <hr>
 {% block content %}{% endblock %}
 <hr>
-{% if visit_info[1] != None %}
-Kävit viimeksi sivustolla {{visit_info[1].strftime("%Y-%m-%d %H:%M:%S")}}
+{% if session["visit_info"][1] != None %}
+Kävit viimeksi sivustolla {{session["visit_info"][1].strftime("%Y-%m-%d %H:%M:%S")}}
 {% endif %}

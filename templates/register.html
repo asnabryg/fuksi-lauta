@@ -3,5 +3,50 @@
 {% block content %}
 
 
+{% if not reg_succeed %}
+    <h2>Rekistöröidy</h2>
+    <form action="/register" method="POST" onsubmit="return checkPassword(this)">
+        <p>
+            Käyttäjätunnus<br>
+            <input type="text" name="username">
+        </p>
+        <p>
+            Salasana:<br>
+            <input type="password" name="password1">
+            Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
+        </p>
+        <p>
+            Salasana uudelleen:<br>
+            <input type="password" name="password2">
+        </p>
+        <input type="submit" value="Rekistöröidy">
+    </form>
+    <p>
+        Jos sinulla on jo käyttäjä, kirjaudu sisään
+        <a href="/login">tästä</a>.
+{% else %}
+    <h3>Rekistöröinti onnistui.</h3>
+    <p>
+        Kirjaudu 
+        <a href="/login"> tästä</a> sisään.
+    </p>
+{% endif %}
+<script>
+    function checkPassword(form) {
+        if (form.password1.value != form.password2.value) {
+            alert("Salasanat eivät täsmää!")
+            return false;
+        }
+        if (!(/\d/.test(form.password1.value))) {
+            alert("Salasanan pitää sisältää vähintään yksi numero!")
+            return false;
+        }
+        if (form.password1.value.length < 8) {
+            alert("Salasana on liian lyhyt!")
+            return false;
+        }
+        return true;
+    }
+</script>
 
-{% endblock %}
+    {% endblock %}

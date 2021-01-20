@@ -2,6 +2,25 @@
 {% block title %}Etusivu{% endblock %}
 {% block content %}
 
+<h2>Kirjaudu</h2>
+<form action="/login" method="POST">
+    <p>
+        Käyttäjätunnus<br>
+        <input type="text" name="username">
+    </p>
+    <p>
+        Salasana:<br>
+        <input type="password" name="password">
+    </p>
+    {% if loginFail %}
+        <span style="color:red">Väärä käyttäjätunnus tai salasana.</span>
+        <br>
+    {% endif %}
+    <input type="submit" value="Kirjaudu">
+</form>
+<p>
+    Rekistöröidy
+    <a href="/register">tästä</a>
+    uudeksi käyttäjäksi.
 
-
-{% endblock %}
+    {% endblock %}
