@@ -4,13 +4,14 @@
 
 <h2>Error</h2>
 <p>
-    {{ error_type }}<br>
-    
+    <h4>{{ error_type }}</h4>
+
     {% if error_message != None %}
         {{ error_message }}
     {% endif %}
 </p>
 <p>
+    <br>
     Palaa <a href={{page}}>takaisin</a>
     tai <a href="/">Etusivulle</a>
 </p>

@@ -30,6 +30,19 @@ def getOnlineUsersCount():
     sql = "SELECT COUNT(*) FROM Users WHERE online=1"
     return db.session.execute(sql).fetchone()[0]
 
+def is_admin():
+    sql = "SELECT admin FROM Users WHERE username=:username"
+    if "user" in session:
+        result = db.session.execute(sql, {"username":session["user"]}).fetchone()[0]
+        if result == 1:
+            return True
+    return False
+
+def is_right_user(username):
+    if "user" in session:
+        return username == session["user"]
+    return False
+
 def update_password(username, new_password):
     hash_password = generate_password_hash(new_password)
     try:

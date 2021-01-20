@@ -1,3 +1,4 @@
+from os import terminal_size
 from flask import Flask
 from flask import redirect, render_template, request
 from flask.globals import session
@@ -64,7 +65,15 @@ def register():
 
 @app.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
+    allow = False
     check_info()
+    if user.is_admin():
+        allow = True
+    if user.is_right_user(username):
+        allow = True
+    if not allow:
+        # ei oikeutettu nähdä sivua!
+        return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
     if request.method == "GET":
         return render_template("profile.html", passUpdated=False)
     else:
@@ -98,7 +107,7 @@ def check_info():
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
 
     session["online_count"] = user.getOnlineUsersCount()
-    
+
     if "visit_info" not in session:
         sql = "SELECT COUNT(*) from Visitors"
         visit_count = db.session.execute(sql).fetchone()[0]
