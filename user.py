@@ -6,15 +6,16 @@ from db import db
 
 
 def login(username, password, check=False):
-    sql ="SELECT username, password FROM Users WHERE username=:username"
+    sql ="SELECT id, username, password FROM Users WHERE username=:username"
     user = db.session.execute(sql, {"username":username}).fetchone()
     if user == None:
         return False
     else:
-        if check_password_hash(user[1], password):
+        if check_password_hash(user[2], password):
             if not check:
                 # Jos vain halutaan tarkastaa nimen ja salasanan oikeellisuus. Default = False
-                session["user"] = user[0]
+                session["user"] = user[1]
+                session["user_id"] = user[0]
                 updateOnlineStatus(username, 1)
             return True
         else:
@@ -34,7 +35,11 @@ def is_admin():
     sql = "SELECT admin FROM Users WHERE username=:username"
     if "user" in session:
         result = db.session.execute(sql, {"username":session["user"]}).fetchone()[0]
+        print("admin", result)
+        print(type(result))
         if result == 1:
+            print("ADMIN")
+            session["admin"] = True
             return True
     return False
 
@@ -69,6 +74,24 @@ def register(username, password1, password2):
         return (False, "Tuntematon virhe. Yritä myöhemmin uudelleen.")
     return (True, None)
 
+def getProfilePic_id(username):
+    # tarkistetaan ensin, onko pic_id
+    sql = "SELECT pic_id FROM Users WHERE username=:username"
+    result = db.session.execute(sql, {"username":username}).fetchone()
+    if result[0] == None:
+        #jos ei ole, etsitään default avatar kuvan id, ja pistetään se käyttjälle
+        sql = "SELECT id FROM Pictures WHERE permission=0"
+        default_img_id = db.session.execute(sql).fetchone()
+        if default_img_id == None:
+            #jos kuvia ei ole vielä lisätty tietokantaan
+            return None
+        sql = "UPDATE Users SET pic_id=:default_img_id WHERE username=:username"
+        db.session.execute(sql, {"default_img_id":default_img_id[0], "username":username})
+        db.session.commit()
+        return 0
+    print("RESULT", result)
+    return result[0]
+
 
 def checkUsername(username):
     sql = "SELECT COUNT(username) FROM Users WHERE username=:username"
@@ -76,6 +99,7 @@ def checkUsername(username):
     if exist == 1:
         return False
     return True
+
 
 
 def checkPassword(pass1, pass2):

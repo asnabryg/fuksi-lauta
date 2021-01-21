@@ -5,6 +5,48 @@
 <p>
     Käyttäjätunnus: {{session["user"]}}
 </p>
+<p>
+    {% if pic_data != None %}
+    <p>
+        <div style="width: 250px; height: 250px;">
+            <img src="data:image/jpeg;base64,{{pic_data}}" alt="Profiilikuva" style="width: inherit">
+        </div>
+    </p>
+    {% endif %}
+    <form action="/changeProfilePic" method="POST">
+        <select name="profile_pic">
+            <option value="{{profile_pics[0][0]}}" selected>{{profile_pics[0][1]}}</option>
+            {% for pic in profile_pics[1:] %}
+                <!-- ID: pic[0], NAME: pic[1] -->
+                <option value="{{pic[0]}}">{{pic[1]}}</option>
+            {% endfor %}
+        </select>
+        <input type="submit" value="Vaihda">
+    </form>
+    <form action="/savePicture" method="POST" enctype="multipart/form-data">
+        <b>Lisää uusi profiilikuva:</b> <br>
+        Kuvatiedoston pitää olla jpg <br>
+        Tiedosto: <input type="file" name="file">
+        <input type="hidden" name="permission_id" value="{{session['user_id']}}"> <br>
+        <input type="submit" value="Lähetä">
+    </form>
+</p>
+{% if "admin" in session %}
+    {% if session["admin"] %}
+    <hr>
+    <p>
+        <h3>Lisää oletusprofiilikuvia tietokantaan:</h3> <br>
+        <form action="/savePicture" method="POST" enctype="multipart/form-data">
+            Tiedosto: <input type="file" name="file">
+            <p>
+                <input type="hidden" name="permission_id" value="0">
+                <input type="submit" value="Lähetä">
+        </form>
+    </p>
+    <hr>
+    {% endif %}
+{% endif %}
+
 <form action="/profile/{{session['user']}}" method="POST" onsubmit="return checkPassword(this)">
     <p>
         <h3>Vaihda salasana:</h3>

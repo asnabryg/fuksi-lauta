@@ -1,11 +1,15 @@
+import base64
 from os import terminal_size
 from flask import Flask
 from flask import redirect, render_template, request
 from flask.globals import session
+from flask.helpers import make_response
 from werkzeug.security import check_password_hash, generate_password_hash
+from zlib import compress, decompress
 
 app = Flask(__name__)
 
+import db as database
 from db import db
 import user
 
@@ -20,6 +24,7 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     check_info()
+    user.is_admin() # tarkastaa onko admin
     if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta kirjautumis sivulle.
         return redirect("/")
@@ -38,6 +43,8 @@ def logout():
     check_info()
     user.updateOnlineStatus(session["user"], 0) #offline
     del session["user"]
+    if user.is_admin():
+        del session["admin"]
     return redirect("/")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -67,6 +74,7 @@ def register():
 def profile(username):
     allow = False
     check_info()
+    print("USERNAME", username)
     if user.is_admin():
         allow = True
     if user.is_right_user(username):
@@ -74,31 +82,69 @@ def profile(username):
     if not allow:
         # ei oikeutettu nähdä sivua!
         return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
+
     if request.method == "GET":
-        return render_template("profile.html", passUpdated=False)
+        print("Picture:", user.getProfilePic_id(session["user"]))
+        return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
     else:
         #Jos vaihtaa salasanan
         password1 = request.form["password1"]
         password2 = request.form["password2"]
         old_password = request.form["old_password"]
         check = user.checkPassword(password1, password2)
-        print("check:", check)
         if check:
             if user.login(session["user"], old_password, check=True):
                 # jos vanha salasana täsmää -> vaihdetaan salasana
                 if not user.update_password(session["user"], password1):
                     # tallentaa uuden salasanan if lausessa ja palauttaa booleanin, että onnistuiko
                     return render_template(
-                        "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Salasanan vahdossa ilmeni ongelmia. Yritä uudelleen.")
+                        "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Salasanan vahdossa ilmeni ongelmia. Yritä uudelleen.")
                 else:
                     # vaihto onnisui
-                    return render_template("profile.html", passUpdated=True)
+                    return render_template("profile.html", passUpdated=True, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
             else:
                 return render_template(
-                    "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Vanha salasana oli väärin.")
+                    "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Vanha salasana oli väärin.")
         else:
             return render_template(
-                "error.html", page="/profile/{{session['user']}}", error="Salasanan vaihto epäonnisui :(", error_message="Uusi salasana ei täyttänyt suosituksia")
+                "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Uusi salasana ei täyttänyt suosituksia")
+
+
+@app.route("/savePicture", methods=["POST"])
+def getProfilePicture():
+    file = request.files["file"]
+    if not file.filename.endswith(".jpg"):
+        return render_template(
+            "error.html", page="/profile/"+session['user'], error="Kuvan lataus epäonnistui :(", error_message="Virheellinen tiedostonimi")
+    name = database.checkPicName(file.filename[:-4], session["user_id"]) # poistaa nimestä ".jpg" ja tarkastaa nimen
+    permission_id = int(request.form["permission_id"])
+    data = file.read()
+    print("orginal size:", len(data))
+    data = compress(data)
+    print("compress size:", len(data))
+    if len(data) > 100 * 1024:
+        return render_template(
+            "error.html", page=""/profile/"+session['user']", error="Kuvan lataus epäonnistui :(", error_message="Tiedosto liian suuri, maximi koko 100 MB")
+    sql = "INSERT INTO Pictures (name, data, permission, visible) VALUES (:name, :data, :permission, :visible)"
+    db.session.execute(sql, {"name": name, "data": data, "permission":permission_id, "visible":1})
+    db.session.commit()
+    if permission_id > 0:
+        # päivitetään Users tableen uusi profiilikuvan id
+        sql = "SELECT MAX(id) FROM Pictures WHERE permission=:permission_id"
+        pic_id = db.session.execute(sql, {"permission_id":permission_id}).fetchone()[0]
+        sql = "UPDATE Users SET pic_id=:pic_id WHERE username=:username"
+        db.session.execute(sql, {"pic_id":pic_id, "username":session["user"]})
+        db.session.commit()
+    return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
+
+@app.route("/changeProfilePic", methods=["POST"])
+def changeProfilePic():
+    pic_id = request.form["profile_pic"]
+    sql = "UPDATE Users SET pic_id=:pic_id WHERE username=:username"
+    db.session.execute(sql, {"pic_id": pic_id, "username": session["user"]})
+    db.session.commit()
+    return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
+
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
