@@ -23,7 +23,79 @@ Luonut:
 {{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
 <br>
 <p>
-    <b>Viestit:</b>
+    {% if "user" in session %}
+        <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
+            Kirjoita viesti:<br>
+            <textarea name="message" rows="5" cols="60" maxlength="500"></textarea>
+            <div id="onJS" style="display: none"><span id="text_length">0</span>/2000 merkkiä</div>
+            <br>Lisää kuva:<br>
+            Tiedosto: <input type="file" name="file"><br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
+            {% if notSucceed %}
+                <span style="color:red">Kuvan lataus epäonnistui.</span><br>
+            {% endif %}
+            <input type="hidden" name="permission_id" value="-2">
+            <p>
+                <input type="submit" value="Lähetä viesti">
+            </p>
+        </form>
+    {% else %}
+        <a href="/login">Kirjaudu</a>
+         tai 
+        <a href="/register">rekisteröidy</a>
+         kirjoittaaksesi viestin.
+    {% endif %}
+    <br>
+    <br>
+    <!-- [[id, topic_id, username, content, pic_name, time, pic_data, profile_pic_data]] -->
+    <b>Viestit:</b> <br>
+    <p>
+        <hr>
+        {% if messages != None %}
+            {% for message in messages %}
+                <b>{{message[2]}}:</b><br>
+                {% if message[7] != None %}
+                    <div style="width: 64px; height: 64px; display: initial;">
+                        <img src="data:image/jpeg;base64,{{message[7]}}" alt="profiilikuva" style="width: inherit">
+                    </div>
+                {% endif %}
+                <br>
+                {{message[3]}}
+                <br>{% if message[4] != None %}
+                <div style="width: 250px; height: 250px;">
+                    <img src="data:image/jpeg;base64,{{message[6]}}" alt="{{topic[4]}}" style="width: inherit">
+                </div>
+                {% endif %}
+                <br><br>
+                lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}
+                <hr>
+            {% endfor %}
+        {% endif %}
+    </p>
 </p>
+<script>
 
+    var textCounter = document.getElementById("onJS");
+    if (textCounter.style.display == "none"){
+        // Jos javascript on päällä, sivusto näyttää viestin merkkien määrän samalla kun kirjoittaa
+        textCounter.style.display = "block"
+    }
+
+    var textarea = document.querySelector("textarea");
+    var currentLength = 0;
+
+    textarea.addEventListener("input", event => {
+            const target = event.currentTarget;
+            currentLength = target.value.length;
+            document.getElementById("text_length").innerText = currentLength
+        });
+
+    function checkText(form) {
+            if (form.message.value == 0) {
+                alert("Viesti ei voi olla tyhjä!")
+                return false;
+            }
+            return true;
+        }
+
+</script>
 {% endblock %}

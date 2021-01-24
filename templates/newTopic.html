@@ -8,10 +8,11 @@
         <b>Aihe:</b><br>
         <input type="text" name="topic" value="{{topic}}" maxlength="60" size="60"><br>
         Viesti:<br>
-        <textarea name="info" rows="5" cols ="80" value="{{info}}" maxlength="2000"></textarea>
+        <textarea name="info" rows="5" cols ="80" maxlength="2000">{{info}}</textarea>
         <div id="onJS" style="display: none"><span id="text_length">0</span>/2000 merkkiä</div>
         <br>Lisää kuva:<br>
         Tiedosto: <input type="file" name="file">
+         Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
         {% if notSucceed %}
             <br>
             <span style="color:red">Kuvan lataus epäonnistui.</span>
@@ -25,10 +26,10 @@
 <script>
 
     var textCounter = document.getElementById("onJS");
-        if (textCounter.style.display == "none") {
-            // Jos javascript on päällä, sivusto näyttää viestin merkkien määrän samalla kun kirjoittaa
-            textCounter.style.display = "block"
-        }
+    if (textCounter.style.display == "none") {
+        // Jos javascript on päällä, sivusto näyttää viestin merkkien määrän samalla kun kirjoittaa
+        textCounter.style.display = "block"
+    }
 
     var textarea = document.querySelector("textarea");
     var currentLength = 0;

@@ -12,6 +12,7 @@ import db as database
 from db import db
 import user
 import topics as t
+import messages as m
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -197,7 +198,7 @@ def changeProfilePic():
     db.session.commit()
     return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
 
-@app.route("/topic<int:id>")
+@app.route("/topic<int:id>", methods=["GET", "POST"])
 def topic(id):
     check_info()
     topic = list(t.getTopic(id)) # 0:topic_id, 1:user_id, 2:topic, 3:info, 4:time, 5:pic_id, 6:visits
@@ -212,7 +213,25 @@ def topic(id):
     topic.append(database.getProfilePictureData(creator))
     # Nyt topic on
     # [topic_id, username, topic, info, time, pic_name, pic_data, creator_profile_pic_data]
-    return render_template("topic.html", topic=topic)
+    if request.method == "POST":
+        if "message" in request.form:
+            # Viestin lähetys
+            message = request.form["message"]
+            file = request.files["file"]
+            pic_id = None
+            if file.filename != "":
+                permission_id = request.form["permission_id"]
+                saved = database.savePicture(file, permission_id)
+                if not saved[0]:
+                    # kuvan lähetys epäonnistui
+                    return render_template("topic.html", topic=topic, notSucceed=True, messages=m.getMessages(id))
+                pic_id = saved[1]
+            # lisätään viesti tietokantaan
+            print("tänne päästii")
+            m.addMessageToTopic(message, pic_id, id, session["user_id"])
+    messages = list(m.getMessages(id))
+    # [[id, topic_id, username, content, pic_name, time, pic_data, profile_pic_data]]
+    return render_template("topic.html", topic=topic, notSucceed=False, messages=messages)
 
 @app.route("/newTopic", methods=["GET", "POST"])
 def newTopic():
@@ -223,10 +242,9 @@ def newTopic():
         topic = request.form["topic"]
         info = request.form["info"]
         file = request.files["file"]
-        print("FILE", file)
         pic_id = None
         print("lisääkö kuvan?")
-        if file != None:
+        if file.filename != "":
             print("lisäsi kuvan")
             permission_id = request.form["permission_id"]
             saved = database.savePicture(file, permission_id)
