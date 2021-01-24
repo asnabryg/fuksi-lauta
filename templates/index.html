@@ -35,8 +35,8 @@
     
     <hr>
     {% for topic in topics %}
-    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data-->
-        <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br>
+    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data-->
+        <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br><br>
         {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
             {{topic[2]}} <br>
         {% else %}
@@ -49,7 +49,13 @@
             </div>
         {% endif %}
         <br>
-        luonut: {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}} <br>
+        luonut:
+        {% if topic[7] != None %}
+        <div style="width: 15px; height: 15px; display: inline;">
+            <img src="data:image/jpeg;base64,{{topic[7]}}" alt="Profiilikuva" style="width: inherit">
+        </div>
+        {% endif %}
+        {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}} <br>
         <hr>
     {% endfor %}
 </p>

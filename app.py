@@ -43,7 +43,12 @@ def index():
                 sort_method = s
                 break
         print("SORT METHOD", sort_method)
+        # (id, topic, info, user, time, pic_name, pic_data)
         topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method[0])
+        for i in range(len(topics)):
+            topic = list(topics[i])
+            topic.append(topic.append(database.getProfilePictureData(topic[3])))
+            topics[i] = topic
         print("topic_count:", t.getTopicCount())
         print("page_count:", page_count)
         print("topics_per_page", topics_per_page)
@@ -60,6 +65,7 @@ def index():
             else:
                 session["current_page"] = int(page)
         if "sort" in request.form:
+            session["current_page"] = 1
             selectedSort = request.form["sort"]
             for i in range(len(session["sort"])):
                 if session["sort"][i][0] == selectedSort:
@@ -75,7 +81,7 @@ def index():
                     session["topics_per_page"][i][1] =  False
         return redirect("/")
 
-        
+
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -93,7 +99,7 @@ def login():
             return redirect("/")
         else:
             return render_template("login.html", loginFail=True)
-            
+
 @app.route("/logout")
 def logout():
     check_info()
@@ -194,17 +200,18 @@ def changeProfilePic():
 @app.route("/topic<int:id>")
 def topic(id):
     check_info()
-    topic = t.getTopic(id) # 0: topic_id, 1: user_id, 2: topic, 3: info 4: aika 5: pic_id 6: visits
+    topic = list(t.getTopic(id)) # 0:topic_id, 1:user_id, 2:topic, 3:info, 4:time, 5:pic_id, 6:visits
     creator = user.getUsername(topic[1])
-    topic = list(topic)
+    topic.append(None) # nyt listan järjestys ei mee rikki, vaikka kuvaa ei olisi
     if topic[5] != None:
         pic_data = database.getPictureData(topic[5])
         pic_name = database.getPictureName(topic[5])
-        topic.append(pic_data)
+        topic[7] = pic_data
         topic[5] = pic_name
     topic[1] = creator
+    topic.append(database.getProfilePictureData(creator))
     # Nyt topic on
-    # [topic_id, username, topic, info, time, pic_name, pic_data]
+    # [topic_id, username, topic, info, time, pic_name, pic_data, creator_profile_pic_data]
     return render_template("topic.html", topic=topic)
 
 @app.route("/newTopic", methods=["GET", "POST"])

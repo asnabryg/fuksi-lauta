@@ -53,6 +53,8 @@ def getPictureData(pic_id):
 
 def getProfilePictureData(username):
     pic_id = user.getProfilePic_id(username)
+    if pic_id == None:
+        return None
     sql = "SELECT data FROM Pictures WHERE id=:pic_id"
     data = db.session.execute(sql, {"pic_id": pic_id}).fetchone()
     if data is not None:
