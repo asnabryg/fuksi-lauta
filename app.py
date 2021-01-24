@@ -15,13 +15,16 @@ import topics as t
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    # palauttaa ajan milloin viimeksi kävit tällä laitteella sivustolla
     check_info()
     if "topics_per_page" not in session:
-        session["topics_per_page"] = 5
-    topics_per_page = session["topics_per_page"]
+        session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]
+    topics_per_page = 10
+    for x in session["topics_per_page"]:
+        if x[1]:
+            topics_per_page = x[0]
+            break
     if "sort" not in session:
-        session["sort"] = ["vanhin ensin", "uusin ensin", "eniten viestejä"]
+        session["sort"] = [["vanhin ensin", True], ["uusin ensin", False], ["eniten viestejä", False]]
     if "limit_offset" not in session:
         session["limit_offset"] = (0, topics_per_page)
     if "current_page" not in session:
@@ -34,7 +37,13 @@ def index():
     else:
         page_count = topic_count // topics_per_page + 1
     if request.method == "GET":
-        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, session["sort"][0])
+        sort_method = "vanhin_ensin"
+        for s in session["sort"]:
+            if s[1]:
+                sort_method = s
+                break
+        print("SORT METHOD", sort_method)
+        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method[0])
         print("topic_count:", t.getTopicCount())
         print("page_count:", page_count)
         print("topics_per_page", topics_per_page)
@@ -43,11 +52,27 @@ def index():
         return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
     else:
         if "page" in request.form:
-            session["current_page"] = int(request.form["page"])
+            page = request.form["page"]
+            if page == "seuraava":
+                session["current_page"] = session["current_page"] + 1
+            elif page == "edellinen":
+                session["current_page"] = session["current_page"] - 1
+            else:
+                session["current_page"] = int(page)
         if "sort" in request.form:
             selectedSort = request.form["sort"]
-            session["sort"].remove(selectedSort)
-            session["sort"].insert(0, selectedSort)
+            for i in range(len(session["sort"])):
+                if session["sort"][i][0] == selectedSort:
+                    session["sort"][i][1] = True
+                else:
+                    session["sort"][i][1] = False
+        if "topics_per_page" in request.form:
+            selectedAmount = request.form["topics_per_page"]
+            for i in range(len(session["topics_per_page"])):
+                if str(session["topics_per_page"][i][0]) == str(selectedAmount):
+                    session["topics_per_page"][i][1] = True
+                else:
+                    session["topics_per_page"][i][1] =  False
         return redirect("/")
 
         

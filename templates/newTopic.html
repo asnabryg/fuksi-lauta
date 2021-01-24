@@ -6,10 +6,10 @@
 <form action="/newTopic" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
     <p>
         <b>Aihe:</b><br>
-        <input type="text" name="topic" value="{{topic}}"><br>
+        <input type="text" name="topic" value="{{topic}}" maxlength="60" size="60"><br>
         Viesti:<br>
-        <textarea name="info" rows="5" cols ="80" value="{{info}}" maxlength="500"></textarea>
-        <div id="onJS" style="display: none"><span id="text_length">0</span>/500 merkkiä</div>
+        <textarea name="info" rows="5" cols ="80" value="{{info}}" maxlength="2000"></textarea>
+        <div id="onJS" style="display: none"><span id="text_length">0</span>/2000 merkkiä</div>
         <br>Lisää kuva:<br>
         Tiedosto: <input type="file" name="file">
         {% if notSucceed %}
