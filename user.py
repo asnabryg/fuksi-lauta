@@ -5,6 +5,10 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from db import db
 
 
+def getUsername(user_id):
+    sql = "SELECT username FROM Users WHERE id=:user_id"
+    return db.session.execute(sql, {"user_id":user_id}).fetchone()[0]
+
 def login(username, password, check=False):
     sql ="SELECT id, username, password FROM Users WHERE username=:username"
     user = db.session.execute(sql, {"username":username}).fetchone()
@@ -35,10 +39,7 @@ def is_admin():
     sql = "SELECT admin FROM Users WHERE username=:username"
     if "user" in session:
         result = db.session.execute(sql, {"username":session["user"]}).fetchone()[0]
-        print("admin", result)
-        print(type(result))
         if result == 1:
-            print("ADMIN")
             session["admin"] = True
             return True
     return False
@@ -89,7 +90,6 @@ def getProfilePic_id(username):
         db.session.execute(sql, {"default_img_id":default_img_id[0], "username":username})
         db.session.commit()
         return 0
-    print("RESULT", result)
     return result[0]
 
 

@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+{% block title %}Etusivu{% endblock %}
+{% block content %}
+
+<!-- 0:topic_id, 1:username, 2:topic, 3:info, 4:time, 5:pic_name, 6:visits 7: pic_data-->
+<h2>{{topic[2]}}</h2>
+{% if topic[5] != None %}
+    <p>
+        <div style="width: 500px; height: 500px;">
+            <img src="data:image/jpeg;base64,{{topic[7]}}" alt="{{topic[5]}}" style="width: inherit">
+        </div>
+    </p>
+{% endif %}
+<p>
+    {{topic[3]}}
+</p>
+Luonut: {{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
+<hr>
+
+{% endblock %}

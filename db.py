@@ -1,16 +1,49 @@
+import re
 from flask.globals import session
 from flask_sqlalchemy import SQLAlchemy
 from os import getenv, urandom
 from base64 import b64encode
-from zlib import decompress
+from zlib import compress, decompress
 from app import app
 
 app.config["SQLALCHEMY_DATABASE_URI"] = getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config["SESSION_PERMANENT"] = False
 app.secret_key = urandom(16).hex()
 db = SQLAlchemy(app)
 
 import user
+
+def savePicture(file, permission_id):
+
+    # Tallentaa kuvan tietokantaan
+    # Jos prosessi epäonnistuu, palautetaan tuple (False, error, error_message)
+    # Jos onnisuu palautetaan (True, pic_id)
+    # pic_id = juuri lisätyn kuvan id
+
+    if not file.filename.endswith(".jpg"):
+        return (False, "Kuvan lataus epäonnistui :(", "Virheellinen tiedostonimi")
+
+    name = checkPicName(file.filename[:-4], session["user_id"]) # poistaa nimestä ".jpg" ja tarkastaa nimen
+    data = file.read()
+    print("orginal size:", len(data))
+    data = compress(data)
+    print("compress size:", len(data))
+    if len(data) > 100 * 1024:
+        return (False, "Kuvan lataus epäonnistui :(", "Tiedosto liian suuri, maximi koko 100 MB")
+    
+    try:
+        sql = "INSERT INTO Pictures (name, data, permission, visible) VALUES (:name, :data, :permission, :visible) RETURNING id"
+        pic_id = db.session.execute(sql, {"name": name, "data": data, "permission":permission_id, "visible":1}).fetchone()[0]
+        db.session.commit()
+    except:
+        return (False, "Kuvan lataus epäonnistui :(", "Tuntematon virhe. Yritä myöhemmin uudellee.")
+
+    return (True, pic_id)
+
+def getPictureName(pic_id):
+    sql = "SELECT name FROM Pictures WHERE id=:pic_id"
+    return db.session.execute(sql, {"pic_id": pic_id}).fetchone()[0]
 
 def getPictureData(pic_id):
     sql = "SELECT data FROM Pictures WHERE id=:pic_id"
@@ -32,13 +65,11 @@ def checkPicName(filename, user_id):
     # jos on niin lisää (uuden id) perään
     sql = "SELECT name FROM Pictures WHERE name=:filename AND permission=:user_id"
     result = db.session.execute(sql, {"filename":filename, "user_id":user_id}).fetchone()
-    print("RESULTS", result)
     if result is not None:
         if filename == result[0]:
             sql = "SELECT COUNT(*) FROM Pictures"
             count = db.session.execute(sql).fetchone()[0]
             filename += " (" + str(count + 1) + ")"
-            print("UUSI NIMI:", filename)
     return filename
 
 def getProfilePicDict(user_id):
@@ -55,6 +86,6 @@ def getProfilePicDict(user_id):
             li.insert(0, (result[0], result[1]))
         else:
             li.append((result[0], result[1]))
-    print("KUVAT:", li)
     return li
+
 

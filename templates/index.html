@@ -3,6 +3,96 @@
 {% block content %}
 <h1>Tervetuloa!</h1>
 <p>
-    Sample text <br>
+    {% if "user" in session %}
+    <a href="/newTopic">Uusi aihe</a>
+    {% endif %}
+    <hr>
+    <form action="/" method="POST">
+        Järjestä: 
+        <select name="sort">
+            <option value="{{session['sort'][0]}}" selected>{{session['sort'][0]}}</option>
+            {% for i in range(1, session['sort']|length) %}
+                <option value="{{session['sort'][i]}}">{{session['sort'][i]}}</option>
+            {% endfor %}
+        </select>
+        <br>
+        <input type="submit" value="päivitä">
+    </form>
+    
+    <hr>
+    {% for topic in topics %}
+    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data-->
+        <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br>
+        {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
+            {{topic[2]}} <br>
+        {% else %}
+            {{topic[2][:100] + " ..."}}
+        {% endif %}
+
+        {% if topic[5] != None %}
+            <div style="width: 128px; height: 128px;">
+                <img src="data:image/jpeg;base64,{{topic[6]}}" alt="{{topic[5]}}" style="width: inherit">
+            </div>
+        {% endif %}
+        <br>
+        luonut: {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}} <br>
+        <hr>
+    {% endfor %}
 </p>
+<div>
+    sivut:
+    <form action="/" method="POST">
+        {% if page_count > 5 %}
+            {% if current > 1 %}
+                <input type="submit" name="page" value="edellinen">
+            {% endif %}
+            {% if 3 >= current %}
+                {% for i in range(1, 6) %}
+                    {% if i == current %}
+                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                    {% else %}
+                        <input type="submit" name="page" value="{{i}}">
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if current > 3 %}
+                <input type="submit" name="page" value="1"> ...
+            {% endif %}
+            {% if current >= page_count-2 %}
+                {% for i in range(page_count-4, page_count+1) %}
+                    {% if i == current %}
+                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                    {% else %}
+                        <input type="submit" name="page" value="{{i}}">
+                    {% endif %}
+                {% endfor %}
+            {% elif current > 3 %}
+                {% for i in range(current-2, current+3) %}
+                    {% if i == current %}
+                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                    {% else %}
+                        <input type="submit" name="page" value="{{i}}">
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            {% if page_count-3 >= current %}
+                ... <input type="submit" name="page" value="{{page_count}}">
+            {% endif %}
+        {% else %}
+            {% if current > 1 %}
+                <input type="submit" name="page" value="edellinen">
+            {% endif %}
+            {% for i in range(1, page_count+1) %}
+                {% if i == current %}
+                    <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                {% else %}
+                    <input type="submit" name="page" value="{{i}}">
+                {% endif %}
+            {% endfor %}
+            {% if page_count > current %}
+                <input type="submit" name="page" value="seuraava">
+            {% endif %}
+        {% endif %}
+    </form>
+</div>
 {% endblock %}

@@ -1,25 +1,56 @@
-import base64
-from os import terminal_size
 from flask import Flask
 from flask import redirect, render_template, request
 from flask.globals import session
-from flask.helpers import make_response
+from sqlalchemy.sql import elements
+from sqlalchemy.sql.elements import Null
 from werkzeug.security import check_password_hash, generate_password_hash
-from zlib import compress, decompress
+from zlib import compress
 
 app = Flask(__name__)
 
 import db as database
 from db import db
 import user
+import topics as t
 
-
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def index():
     # palauttaa ajan milloin viimeksi kävit tällä laitteella sivustolla
     check_info()
-    return render_template("index.html")
+    if "topics_per_page" not in session:
+        session["topics_per_page"] = 5
+    topics_per_page = session["topics_per_page"]
+    if "sort" not in session:
+        session["sort"] = ["vanhin ensin", "uusin ensin", "eniten viestejä"]
+    if "limit_offset" not in session:
+        session["limit_offset"] = (0, topics_per_page)
+    if "current_page" not in session:
+        session["current_page"] = 1
+    offset = (session["current_page"] * topics_per_page) - topics_per_page
+    session["limit_offset"] = (topics_per_page, offset)
+    topic_count = t.getTopicCount()
+    if topic_count % topics_per_page == 0:
+        page_count = topic_count // topics_per_page
+    else:
+        page_count = topic_count // topics_per_page + 1
+    if request.method == "GET":
+        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, session["sort"][0])
+        print("topic_count:", t.getTopicCount())
+        print("page_count:", page_count)
+        print("topics_per_page", topics_per_page)
+        print("offset:", offset)
+        print("current_page:", session["current_page"])
+        return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
+    else:
+        if "page" in request.form:
+            session["current_page"] = int(request.form["page"])
+        if "sort" in request.form:
+            selectedSort = request.form["sort"]
+            session["sort"].remove(selectedSort)
+            session["sort"].insert(0, selectedSort)
+        return redirect("/")
 
+        
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -45,6 +76,7 @@ def logout():
     del session["user"]
     if user.is_admin():
         del session["admin"]
+    session.clear()
     return redirect("/")
 
 @app.route("/register", methods=["GET", "POST"])
@@ -60,7 +92,6 @@ def register():
         password1 = request.form["password1"]
         password2 = request.form["password2"]
         check = user.register(username, password1, password2)
-        print("CHECK:", check)
         if check[0]:
             #rekistöröinti onnistui
             return render_template("register.html", reg_succeed=True, error_message=None)
@@ -74,7 +105,6 @@ def register():
 def profile(username):
     allow = False
     check_info()
-    print("USERNAME", username)
     if user.is_admin():
         allow = True
     if user.is_right_user(username):
@@ -84,7 +114,7 @@ def profile(username):
         return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
 
     if request.method == "GET":
-        print("Picture:", user.getProfilePic_id(session["user"]))
+        # print("Picture:", user.getProfilePic_id(session["user"]))
         return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
     else:
         #Jos vaihtaa salasanan
@@ -113,25 +143,16 @@ def profile(username):
 @app.route("/savePicture", methods=["POST"])
 def getProfilePicture():
     file = request.files["file"]
-    if not file.filename.endswith(".jpg"):
-        return render_template(
-            "error.html", page="/profile/"+session['user'], error="Kuvan lataus epäonnistui :(", error_message="Virheellinen tiedostonimi")
-    name = database.checkPicName(file.filename[:-4], session["user_id"]) # poistaa nimestä ".jpg" ja tarkastaa nimen
     permission_id = int(request.form["permission_id"])
-    data = file.read()
-    print("orginal size:", len(data))
-    data = compress(data)
-    print("compress size:", len(data))
-    if len(data) > 100 * 1024:
-        return render_template(
-            "error.html", page=""/profile/"+session['user']", error="Kuvan lataus epäonnistui :(", error_message="Tiedosto liian suuri, maximi koko 100 MB")
-    sql = "INSERT INTO Pictures (name, data, permission, visible) VALUES (:name, :data, :permission, :visible)"
-    db.session.execute(sql, {"name": name, "data": data, "permission":permission_id, "visible":1})
-    db.session.commit()
+    saved = database.savePicture(file, permission_id)
+    if not saved[0]:
+        # virhe tapahtui
+        return render_template("error.html", page="/profile/"+session['user'], error=saved[1], error_message=saved[2])
     if permission_id > 0:
         # päivitetään Users tableen uusi profiilikuvan id
-        sql = "SELECT MAX(id) FROM Pictures WHERE permission=:permission_id"
-        pic_id = db.session.execute(sql, {"permission_id":permission_id}).fetchone()[0]
+        # sql = "SELECT MAX(id) FROM Pictures WHERE permission=:permission_id"
+        # pic_id = db.session.execute(sql, {"permission_id":permission_id}).fetchone()[0]
+        pic_id = saved[1]
         sql = "UPDATE Users SET pic_id=:pic_id WHERE username=:username"
         db.session.execute(sql, {"pic_id":pic_id, "username":session["user"]})
         db.session.commit()
@@ -145,6 +166,46 @@ def changeProfilePic():
     db.session.commit()
     return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
 
+@app.route("/topic<int:id>")
+def topic(id):
+    check_info()
+    topic = t.getTopic(id) # 0: topic_id, 1: user_id, 2: topic, 3: info 4: aika 5: pic_id 6: visits
+    creator = user.getUsername(topic[1])
+    topic = list(topic)
+    if topic[5] != None:
+        pic_data = database.getPictureData(topic[5])
+        pic_name = database.getPictureName(topic[5])
+        topic.append(pic_data)
+        topic[5] = pic_name
+    topic[1] = creator
+    # Nyt topic on
+    # [topic_id, username, topic, info, time, pic_name, pic_data]
+    return render_template("topic.html", topic=topic)
+
+@app.route("/newTopic", methods=["GET", "POST"])
+def newTopic():
+    check_info()
+    if request.method == "GET":
+        return render_template("newTopic.html", notSucceed=False, topic="", info="")
+    else:
+        topic = request.form["topic"]
+        info = request.form["info"]
+        file = request.files["file"]
+        print("FILE", file)
+        pic_id = None
+        print("lisääkö kuvan?")
+        if file != None:
+            print("lisäsi kuvan")
+            permission_id = request.form["permission_id"]
+            saved = database.savePicture(file, permission_id)
+            if not saved[0]:
+                return render_template("newTopic.html", notSucceed=True, topic=topic, info=info)
+            pic_id = saved[1]
+        # lisää topic tietokantaan
+        sql = "INSERT INTO Topics (user_id, topic, info, time, pic_id) VALUES (:user_id, :topic, :info, NOW(), :pic_id)"
+        db.session.execute(sql, {"user_id": int(session["user_id"]), "topic": topic, "info": info, "pic_id": pic_id})
+        db.session.commit()
+        return redirect("/")
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
