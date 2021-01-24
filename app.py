@@ -17,19 +17,11 @@ import messages as m
 @app.route("/", methods=["GET", "POST"])
 def index():
     check_info()
-    if "topics_per_page" not in session:
-        session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]
     topics_per_page = 10
     for x in session["topics_per_page"]:
         if x[1]:
             topics_per_page = x[0]
             break
-    if "sort" not in session:
-        session["sort"] = [["vanhin ensin", True], ["uusin ensin", False], ["eniten viestejä", False]]
-    if "limit_offset" not in session:
-        session["limit_offset"] = (0, topics_per_page)
-    if "current_page" not in session:
-        session["current_page"] = 1
     offset = (session["current_page"] * topics_per_page) - topics_per_page
     session["limit_offset"] = (topics_per_page, offset)
     topic_count = t.getTopicCount()
@@ -55,6 +47,7 @@ def index():
         print("topics_per_page", topics_per_page)
         print("offset:", offset)
         print("current_page:", session["current_page"])
+        session["last_page"] = "/"
         return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
     else:
         if "page" in request.form:
@@ -80,25 +73,45 @@ def index():
                     session["topics_per_page"][i][1] = True
                 else:
                     session["topics_per_page"][i][1] =  False
+        session["last_page"] = "/"
         return redirect("/")
 
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    print("LAST PAGE", session["last_page"])
     check_info()
+    print("LAST PAGE", session["last_page"])
     user.is_admin() # tarkastaa onko admin
     if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta kirjautumis sivulle.
+        if "/topic" in session["last_page"]:
+            if "/topic" not in session["last_page"]:
+                session["last_page"] = "/login"
+            return redirect(session["last_page"])
+        session["last_page"] = "/login"
         return redirect("/")
     if request.method == "GET":
+        if "/topic" not in session["last_page"]:
+            session["last_page"] = "/"
         return render_template("login.html", loginFail=False)
     else:
         username = request.form["username"]
         password = request.form["password"]
         if user.login(username, password):
+            print("LAST PAGE", session["last_page"])
+            if "topic" in session["last_page"]:
+                print("ASDASDSADASDAS")
+                last = session["last_page"]
+                session["last_page"] = "/login"
+                return redirect(last)
+            print("EIEIEIE")
+            session["last_page"] = "/login"
             return redirect("/")
         else:
+            if "/topic" not in session["last_page"]:
+                session["last_page"] = "/login"
             return render_template("login.html", loginFail=True)
 
 @app.route("/logout")
@@ -116,8 +129,11 @@ def register():
     check_info()
     if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta rekistöytymis sivulle.
+        session["last_page"] = "/register"
         return redirect("/")
     if request.method == "GET":
+        if "/topic" not in session["last_page"]:
+            session["last_page"] = "/register"
         return render_template("register.html", reg_succeed=False)
     else:
         username = request.form["username"]
@@ -126,9 +142,13 @@ def register():
         check = user.register(username, password1, password2)
         if check[0]:
             #rekistöröinti onnistui
+            if "/topic" not in session["last_page"]:
+                session["last_page"] = "/register"
             return render_template("register.html", reg_succeed=True, error_message=None)
         else:
             #ei onnistunut ja JS ei päällä, tai nimi oli jo käytössä, tai rekistöröintiä ei voitu tallentaa psql.
+            if "/topic" not in session["last_page"]:
+                session["last_page"] = "/register"
             return render_template("error.html", page="/register", error_type="Rekisteröinti ei onnistunut :(", error_message=check[1])
 
 
@@ -143,10 +163,12 @@ def profile(username):
         allow = True
     if not allow:
         # ei oikeutettu nähdä sivua!
+        session["last_page"] = "/profile/" + username
         return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
 
     if request.method == "GET":
         # print("Picture:", user.getProfilePic_id(session["user"]))
+        session["last_page"] = "/profile/" + username
         return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
     else:
         #Jos vaihtaa salasanan
@@ -159,15 +181,19 @@ def profile(username):
                 # jos vanha salasana täsmää -> vaihdetaan salasana
                 if not user.update_password(session["user"], password1):
                     # tallentaa uuden salasanan if lausessa ja palauttaa booleanin, että onnistuiko
+                    session["last_page"] = "/profile/" + username
                     return render_template(
                         "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Salasanan vahdossa ilmeni ongelmia. Yritä uudelleen.")
                 else:
                     # vaihto onnisui
+                    session["last_page"] = "/profile/" + username
                     return render_template("profile.html", passUpdated=True, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
             else:
+                session["last_page"] = "/profile/" + username
                 return render_template(
                     "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Vanha salasana oli väärin.")
         else:
+            session["last_page"] = "/profile/" + username
             return render_template(
                 "error.html", page="/profile/"+session['user'], error="Salasanan vaihto epäonnisui :(", error_message="Uusi salasana ei täyttänyt suosituksia")
 
@@ -224,19 +250,21 @@ def topic(id):
                 saved = database.savePicture(file, permission_id)
                 if not saved[0]:
                     # kuvan lähetys epäonnistui
+                    session["last_page"] = "/topic" + str(id)
                     return render_template("topic.html", topic=topic, notSucceed=True, messages=m.getMessages(id))
                 pic_id = saved[1]
             # lisätään viesti tietokantaan
-            print("tänne päästii")
             m.addMessageToTopic(message, pic_id, id, session["user_id"])
     messages = list(m.getMessages(id))
     # [[id, topic_id, username, content, pic_name, time, pic_data, profile_pic_data]]
+    session["last_page"] = "/topic" + str(id)
     return render_template("topic.html", topic=topic, notSucceed=False, messages=messages)
 
 @app.route("/newTopic", methods=["GET", "POST"])
 def newTopic():
     check_info()
     if request.method == "GET":
+        session["last_page"] = "/newTopic"
         return render_template("newTopic.html", notSucceed=False, topic="", info="")
     else:
         topic = request.form["topic"]
@@ -249,19 +277,38 @@ def newTopic():
             permission_id = request.form["permission_id"]
             saved = database.savePicture(file, permission_id)
             if not saved[0]:
+                session["last_page"] = "/newTopic"
                 return render_template("newTopic.html", notSucceed=True, topic=topic, info=info)
             pic_id = saved[1]
         # lisää topic tietokantaan
         sql = "INSERT INTO Topics (user_id, topic, info, time, pic_id) VALUES (:user_id, :topic, :info, NOW(), :pic_id)"
         db.session.execute(sql, {"user_id": int(session["user_id"]), "topic": topic, "info": info, "pic_id": pic_id})
         db.session.commit()
+        session["last_page"] = "/newTopic"
         return redirect("/")
+
+@app.route("/remove", methods=["POST"])
+def remove():
+    pass
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
     # Tarkistaa ip_osoitteen ja päivittää sen kävijöihin hashattuna, jos uusi kävijä
     # Tarkistaa milloin viimeksi käyty sivulla
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
+
+    if "last_page" not in session:
+        print("ASDSADSADSADSADSADSADASDSADSAJDÖKSAJDÖKJSADÖKSA")
+        session["lsat_page"] = "/"
+    if "topics_per_page" not in session:
+        session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]
+    if "sort" not in session:
+        session["sort"] = [["vanhin ensin", True], ["uusin ensin", False],
+                           ["eniten viestejä", False]]
+    if "limit_offset" not in session:
+        session["limit_offset"] = (0, 10)
+    if "current_page" not in session:
+        session["current_page"] = 1
 
     session["online_count"] = user.getOnlineUsersCount()
 

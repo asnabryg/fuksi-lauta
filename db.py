@@ -91,4 +91,5 @@ def getProfilePicDict(user_id):
             li.insert(0, (result[0], result[1]))
         else:
             li.append((result[0], result[1]))
+    print("RESULT", li)
     return li

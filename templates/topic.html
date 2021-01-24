@@ -66,7 +66,11 @@ Luonut:
                 </div>
                 {% endif %}
                 <br><br>
-                lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}
+                lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
+                <form action="/remove" method="POST">
+                    <input type="hidden" name="remove_message_id" value="{{message[0]}}">
+                    <input type="submit" value="Poista">
+                </form>
                 <hr>
             {% endfor %}
         {% endif %}

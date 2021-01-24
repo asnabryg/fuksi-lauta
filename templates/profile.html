@@ -13,7 +13,7 @@
         </div>
     </p>
     {% endif %}
-
+    {% if profile_pics[0]|length != 0 %}
     <form action="/changeProfilePic" method="POST">
         <select name="profile_pic">
             <option value="{{profile_pics[0][0]}}" selected>{{profile_pics[0][1]}}</option>
@@ -24,6 +24,7 @@
         </select>
         <input type="submit" value="Vaihda">
     </form>
+    {% endif %}
     <form action="/savePicture" method="POST" enctype="multipart/form-data">
         <b>Lisää uusi profiilikuva:</b> <br>
         Tiedosto: <input type="file" name="file"> <br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
