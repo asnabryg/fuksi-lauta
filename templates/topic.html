@@ -3,6 +3,7 @@
 {% block content %}
 
 <!-- 0:topic_id, 1:username, 2:topic, 3:info, 4:time, 5:pic_name, 6:visits 7: pic_data 8:profile_pic_data-->
+
 <h2>{{topic[2]}}</h2>
 {% if topic[5] != None %}
     <p>
@@ -22,6 +23,13 @@ Luonut:
 {% endif %}
 {{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
 <br>
+{% if topic[1] == session["user"] or session["admin"] %}
+    <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
+        <input type="hidden" name="topic_id" value="{{topic[0]}}">
+        <input type="submit" value="Poista lanka">
+    </form>
+{% endif %}
+<hr>
 <p>
     {% if "user" in session %}
         <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
@@ -67,11 +75,14 @@ Luonut:
                 {% endif %}
                 <br><br>
                 lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
-                <form action="/remove" method="POST">
-                    <input type="hidden" name="remove_message_id" value="{{message[0]}}">
-                    <input type="submit" value="Poista">
-                </form>
-                <hr>
+                {% if message[2] == session["user"] or session["admin"]%}
+                    <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
+                        <input type="hidden" name="remove_message_id" value="{{message[0]}}">
+                        <input type="hidden" name="topic_id" value="{{message[1]}}">
+                        <input type="submit" value="Poista viesti">
+                    </form>
+                    <hr>
+                {% endif %}
             {% endfor %}
         {% endif %}
     </p>
@@ -100,6 +111,14 @@ Luonut:
             }
             return true;
         }
+    
+    function checkRemoveMessage(form){
+        return confirm("Haluatko poistaa viestin?")
+    }
+
+    function checkRemoveTopic(form){
+        return confirm("Haluatko poistaa langan?")
+    }
 
 </script>
 {% endblock %}

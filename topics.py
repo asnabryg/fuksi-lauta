@@ -1,3 +1,4 @@
+import re
 from flask.globals import session
 from werkzeug.security import check_password_hash, generate_password_hash
 from db import db
@@ -48,3 +49,12 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="vanhin ensin"):
                 pic_data = database.getPictureData(results[i][5])
             li.append((results[i][0], results[i][2], results[i][3], user.getUsername(results[i][1]), results[i][4], pic_name, pic_data))
     return li
+
+def removeTopic(topic_id):
+    try:
+        sql = "DELETE FROM Topics WHERE id=:topic_id"
+        db.session.execute(sql, {"topic_id":topic_id})
+        db.session.commit()
+        return True
+    except:
+        return False

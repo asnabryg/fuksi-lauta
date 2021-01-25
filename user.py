@@ -35,6 +35,10 @@ def getOnlineUsersCount():
     sql = "SELECT COUNT(*) FROM Users WHERE online=1"
     return db.session.execute(sql).fetchone()[0]
 
+def getUserCount():
+    sql = "SELECT COUNT(*) FROM Users"
+    return db.session.execute(sql).fetchone()[0]
+
 def is_admin():
     sql = "SELECT admin FROM Users WHERE username=:username"
     if "user" in session:

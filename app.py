@@ -255,6 +255,7 @@ def topic(id):
                 pic_id = saved[1]
             # lisätään viesti tietokantaan
             m.addMessageToTopic(message, pic_id, id, session["user_id"])
+            return redirect("/topic" + str(id))
     messages = list(m.getMessages(id))
     # [[id, topic_id, username, content, pic_name, time, pic_data, profile_pic_data]]
     session["last_page"] = "/topic" + str(id)
@@ -287,16 +288,27 @@ def newTopic():
         session["last_page"] = "/newTopic"
         return redirect("/")
 
-@app.route("/remove", methods=["POST"])
-def remove():
-    pass
+@app.route("/remove_message", methods=["POST"])
+def remove_message():
+    message_id = request.form["remove_message_id"]
+    if m.removeMessage(message_id):
+        return redirect("/topic" + str(request.form["topic_id"]))
+    return render_template("error.html", page="/topic" + str(request.form["topic_id"]), error="Viestin poistaminen epäonnistui", error_message="Yritä myöhemmin uudelleen.")
+
+
+@app.route("/remove_topic", methods=["POST"])
+def remove_topic():
+    topic_id = request.form["topic_id"]
+    if t.removeTopic(topic_id):
+        return redirect("/")
+    return render_template("error.html", page="/topic" + str(topic_id), error="Langan poistaminen epäonnistui", error_message="Yritä myöhemmin uudelleen.") 
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
     # Tarkistaa ip_osoitteen ja päivittää sen kävijöihin hashattuna, jos uusi kävijä
     # Tarkistaa milloin viimeksi käyty sivulla
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
-
+    user.is_admin()
     if "last_page" not in session:
         print("ASDSADSADSADSADSADSADASDSADSAJDÖKSAJDÖKJSADÖKSA")
         session["lsat_page"] = "/"
@@ -311,8 +323,7 @@ def check_info():
         session["current_page"] = 1
     headers_list = request.headers.getlist("X-Forwarded-For")
     user_ip = headers_list[0] if headers_list else request.remote_addr
-    print("IP osoite:", user_ip)
-    session["online_count"] = user.getOnlineUsersCount()
+    session["user_count"] = user.getUserCount()
     if "visit_info" not in session:
         sql = "SELECT COUNT(*) from Visitors"
         visit_count = db.session.execute(sql).fetchone()[0]

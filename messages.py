@@ -1,3 +1,4 @@
+from flask.globals import session
 from db import db
 import db as database
 import user
@@ -33,3 +34,12 @@ def getMessages(topic_id, sort="uusin ensin"):
                 message[2]))  # lisää viestin lähettäjän profiilikuvan datan
             messages[i] = message
     return messages
+
+def removeMessage(message_id):
+    try:
+        sql = "DELETE FROM Messages WHERE id=:message_id"
+        db.session.execute(sql, {"message_id": message_id, "user_id":session["user_id"]})
+        db.session.commit()
+        return True
+    except:
+        return False
