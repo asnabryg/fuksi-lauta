@@ -310,6 +310,8 @@ def check_info():
     if "current_page" not in session:
         session["current_page"] = 1
 
+    print("IP osoite1:", request.remote_addr)
+    print("IP osoite2:", request.environ['REMOTE_ADDR'])
     session["online_count"] = user.getOnlineUsersCount()
     if "visit_info" not in session:
         sql = "SELECT COUNT(*) from Visitors"
