@@ -309,9 +309,9 @@ def check_info():
         session["limit_offset"] = (0, 10)
     if "current_page" not in session:
         session["current_page"] = 1
-
-    print("IP osoite1:", request.remote_addr)
-    print("IP osoite2:", request.environ['REMOTE_ADDR'])
+    headers_list = request.headers.getlist("X-Forwarded-For")
+    user_ip = headers_list[0] if headers_list else request.remote_addr
+    print("IP osoite:", user_ip)
     session["online_count"] = user.getOnlineUsersCount()
     if "visit_info" not in session:
         sql = "SELECT COUNT(*) from Visitors"
@@ -319,7 +319,7 @@ def check_info():
         sql = "SELECT id, ip_address, last_visit from Visitors"
         ips = db.session.execute(sql).fetchall()
         for ip in ips:
-            if check_password_hash(ip[1], request.environ['REMOTE_ADDR']):
+            if check_password_hash(ip[1], user_ip):
                 last_visit = ip[2]
                 # päivittää viimeisimmän käynnin sivustolla tällä laitteella
                 sql = "UPDATE Visitors SET last_visit=NOW() WHERE id=id"
@@ -333,7 +333,7 @@ def check_info():
                     break
         else:
             ip_address = generate_password_hash(
-                request.environ['REMOTE_ADDR'], method='pbkdf2:sha256:1', salt_length=1)
+                user_ip, method='pbkdf2:sha256:1', salt_length=1)
             # lisää hashatun ip osoitteen tietokantaan
             sql = "INSERT INTO Visitors (ip_address, last_visit) VALUES (:ip_address, NOW())"
             db.session.execute(sql, {"ip_address": ip_address})
