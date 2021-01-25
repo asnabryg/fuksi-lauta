@@ -1,3 +1,4 @@
+from re import search
 from flask import Flask
 from flask import redirect, render_template, request
 from flask.globals import session
@@ -42,10 +43,11 @@ def index():
                 break
         print("THEME", theme)
         # (id, topic, info, user, time, pic_name, pic_data)
-        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method, theme)
+        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method, theme, session["search"])
         for i in range(len(topics)):
             topic = list(topics[i])
-            topic.append(topic.append(database.getProfilePictureData(topic[3])))
+            topic.append(database.getProfilePictureData(topic[3]))
+            topic.append(t.getMessageCount(topic[0]))
             topics[i] = topic
         print("topic_count:", t.getTopicCount())
         print("page_count:", page_count)
@@ -55,6 +57,8 @@ def index():
         session["last_page"] = "/"
         return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
     else:
+        search = request.form["search"]
+        session["search"] = search
         if "theme" in request.form:
             theme = request.form["theme"]
             for i in range(len(session["theme"])):
@@ -129,10 +133,11 @@ def login():
 @app.route("/logout")
 def logout():
     check_info()
-    user.updateOnlineStatus(session["user"], 0) #offline
-    del session["user"]
-    if user.is_admin():
-        del session["admin"]
+    if "user" in session:
+        user.updateOnlineStatus(session["user"], 0) #offline
+        del session["user"]
+        if user.is_admin():
+            del session["admin"]
     session.clear()
     return redirect("/")
 
@@ -327,6 +332,8 @@ def check_info():
     # Tarkistaa milloin viimeksi käyty sivulla
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
     user.is_admin()
+    if "search" not in session:
+        session["search"] = ""
     if "theme" not in session:
         session["theme"] = [["Kaikki", True], ["Satunnainen", False],
                             ["Autot", False], ["Harrastukset", False],

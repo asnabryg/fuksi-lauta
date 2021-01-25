@@ -26,23 +26,29 @@ def getTopicsByMostMessages(topic_amount = 10):
     sql = "SELECT topic_id FROM Messages GROUP BY topic_id ORDER BY COUNT(id) LIMIT 10"
     return db.session.execute(sql).fetchall()
 
-def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki"):
+def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search=""):
     # orders: "oldest", "newest", "most_messages", "most_visits", "last_messages"
+    parts = search.split(" ")
+    search = "|".join(parts)
+    search = "%(" + search + ")%"
     results = None
     if theme == "Kaikki":
         theme = None
+
+    print("THEME, SEARCH", theme, search)
     if order == "eniten viestejä":
-        sql = "SELECT topic_id FROM Messages GROUP BY topic_id ORDER BY COUNT(id) LIMIT :mihin OFFSET :mista"
-        results = db.session.execute(sql, {"mihin": mihin, "mista": mista}).fetchall()
+        # topic = (id, user_id, topic, info, time, pic_id, visits, theme)
+        sql = "SELECT T.* FROM Topics T LEFT JOIN Messages M ON M.topic_id=T.id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(M.*) DESC LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
         if results == []:
-            order = "oldest"
+            order = "vanhin ensin"
 
     if order == "vanhin ensin":
-        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) LIMIT :mihin OFFSET :mista"
-        results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme}).fetchall()
+        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search) LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
     if order == "uusin ensin":
-        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) ORDER BY id DESC LIMIT :mihin OFFSET :mista"
-        results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme}).fetchall()
+        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search) ORDER BY id DESC LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme, "search": search}).fetchall()
 
     if results is None:
         return None
@@ -68,3 +74,7 @@ def removeTopic(topic_id):
         return True
     except:
         return False
+
+def getMessageCount(topic_id):
+    sql = "SELECT COUNT(*) FROM Messages WHERE topic_id=:topic_id"
+    return db.session.execute(sql, {"topic_id":topic_id}).fetchone()[0]

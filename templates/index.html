@@ -8,6 +8,8 @@
     {% endif %}
     <hr>
     <form action="/" method="POST">
+        Haku:<br>
+        <input type="text" name="search" placeholder="Etsi sanoilla" value="{{session['search']}}"><br><br>
         Aihealue:<br>
         <select name="theme">
             {% for i in range(session['theme']|length) %}
@@ -46,7 +48,7 @@
     
     {% for topic in topics %}
     <hr>
-    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data-->
+    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: message_count-->
         <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br><br>
         {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
             {{topic[2]}} <br>
@@ -66,7 +68,8 @@
             <img src="data:image/jpeg;base64,{{topic[7]}}" alt="Profiilikuva" style="width: inherit">
         </div>
         {% endif %}
-        {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}} <br>
+        {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M")}} <br>
+        Viestejä: {{topic[8]}} kpl
     {% endfor %}
 </p>
 {% if page_count > 1%}
