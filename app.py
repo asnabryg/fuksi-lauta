@@ -33,11 +33,16 @@ def index():
         sort_method = "vanhin_ensin"
         for s in session["sort"]:
             if s[1]:
-                sort_method = s
+                sort_method = s[0]
                 break
-        print("SORT METHOD", sort_method)
+        theme = "Kaikki"
+        for th in session["theme"]:
+            if th[1]:
+                theme = th[0]
+                break
+        print("THEME", theme)
         # (id, topic, info, user, time, pic_name, pic_data)
-        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method[0])
+        topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method, theme)
         for i in range(len(topics)):
             topic = list(topics[i])
             topic.append(topic.append(database.getProfilePictureData(topic[3])))
@@ -50,6 +55,13 @@ def index():
         session["last_page"] = "/"
         return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
     else:
+        if "theme" in request.form:
+            theme = request.form["theme"]
+            for i in range(len(session["theme"])):
+                if session["theme"][i][0] == theme:
+                    session["theme"][i][1] = True
+                    continue
+                session["theme"][i][1] = False
         if "page" in request.form:
             page = request.form["page"]
             if page == "seuraava":
@@ -264,6 +276,8 @@ def topic(id):
 @app.route("/newTopic", methods=["GET", "POST"])
 def newTopic():
     check_info()
+    if "user" not in session:
+        return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
     if request.method == "GET":
         session["last_page"] = "/newTopic"
         return render_template("newTopic.html", notSucceed=False, topic="", info="")
@@ -271,6 +285,10 @@ def newTopic():
         topic = request.form["topic"]
         info = request.form["info"]
         file = request.files["file"]
+        theme = request.form["theme"]
+        if theme == "unselected":
+            # jos JavaScript ei ole päällä, sivu ei tarkasta onko aihealue valittu
+            theme = "Satunnainen"
         pic_id = None
         print("lisääkö kuvan?")
         if file.filename != "":
@@ -282,11 +300,11 @@ def newTopic():
                 return render_template("newTopic.html", notSucceed=True, topic=topic, info=info)
             pic_id = saved[1]
         # lisää topic tietokantaan
-        sql = "INSERT INTO Topics (user_id, topic, info, time, pic_id) VALUES (:user_id, :topic, :info, NOW(), :pic_id)"
-        db.session.execute(sql, {"user_id": int(session["user_id"]), "topic": topic, "info": info, "pic_id": pic_id})
-        db.session.commit()
-        session["last_page"] = "/newTopic"
-        return redirect("/")
+        if t.addNewTopic(int(session["user_id"]), topic, info, pic_id, theme):
+            session["last_page"] = "/newTopic"
+            return redirect("/")
+        else:
+            return render_template("error.html", page="/newTopic", error="Langan lisäys ei onnistunut", error_message="Yritä myöhemmin uudelleen.")
 
 @app.route("/remove_message", methods=["POST"])
 def remove_message():
@@ -301,7 +319,7 @@ def remove_topic():
     topic_id = request.form["topic_id"]
     if t.removeTopic(topic_id):
         return redirect("/")
-    return render_template("error.html", page="/topic" + str(topic_id), error="Langan poistaminen epäonnistui", error_message="Yritä myöhemmin uudelleen.") 
+    return render_template("error.html", page="/topic" + str(topic_id), error="Langan poistaminen epäonnistui", error_message="Yritä myöhemmin uudelleen.")
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
@@ -309,8 +327,14 @@ def check_info():
     # Tarkistaa milloin viimeksi käyty sivulla
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
     user.is_admin()
+    if "theme" not in session:
+        session["theme"] = [["Kaikki", True], ["Satunnainen", False],
+                            ["Autot", False], ["Harrastukset", False],
+                            ["Musiikki", False], ["Pelit", False],
+                            ["Ruoka", False], ["Tietokoneet", False],
+                            ["Tietotekniikka", False], ["Urheilu", False],
+                            ["testing", False]]
     if "last_page" not in session:
-        print("ASDSADSADSADSADSADSADASDSADSAJDÖKSAJDÖKJSADÖKSA")
         session["lsat_page"] = "/"
     if "topics_per_page" not in session:
         session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]

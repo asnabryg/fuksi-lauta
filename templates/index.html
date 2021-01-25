@@ -8,7 +8,18 @@
     {% endif %}
     <hr>
     <form action="/" method="POST">
-        Järjestä:
+        Aihealue:<br>
+        <select name="theme">
+            {% for i in range(session['theme']|length) %}
+                {% if session['theme'][i][1] %}
+                    <option value="{{session['theme'][i][0]}}" selected>{{session['theme'][i][0]}}</option>
+                {% else %}
+                    <option value="{{session['theme'][i][0]}}">{{session['theme'][i][0]}}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <br>
+        Järjestä:<br>
         <select name="sort">
             {% for i in range(session['sort']|length) %}
                 {% if session['sort'][i][1] %}
@@ -19,7 +30,7 @@
             {% endfor %}
         </select>
         <br>
-        Aiheita per sivu:
+        Aiheita per sivu:<br>
         <select name="topics_per_page">
             {% for i in range(session['topics_per_page']|length) %}
                 {% if session['topics_per_page'][i][1] %}

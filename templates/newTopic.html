@@ -4,21 +4,33 @@
 
 
 <form action="/newTopic" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
-    <p>
-        <b>Aihe:</b><br>
+        <b>Otsikko:</b><br>
         <input type="text" name="topic" value="{{topic}}" maxlength="60" size="60"><br>
         Viesti:<br>
         <textarea name="info" rows="5" cols ="80" maxlength="2000">{{info}}</textarea>
         <div id="onJS" style="display: none"><span id="text_length">0</span>/2000 merkkiä</div>
         <br>Lisää kuva:<br>
-        Tiedosto: <input type="file" name="file">
-         Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
+        Tiedosto: <input type="file" name="file"><br>
+        Tuetut kuvatiedostot: .png, .jpg, .jpeg
         {% if notSucceed %}
             <br>
             <span style="color:red">Kuvan lataus epäonnistui.</span>
         {% endif %}
-        <input type="hidden" name="permission_id" value="-1"> <br>
-    </p>
+        <input type="hidden" name="permission_id" value="-1">
+        <p>Aihealue:<br>
+        <select name="theme">
+            <option disabled selected value="unselected">valitse</option>
+            <option value="Satunnainen">Satunnainen</option>
+            <option value="Autot">Autot</option>
+            <option value="Harrastukset">Harrastukset</option>
+            <option value="Musiikki">Musiikki</option>
+            <option value="Pelit">Pelit</option>
+            <option value="Ruoka">Ruoka</option>
+            <option value="Tietokoneet">Tietokoneet</option>
+            <option value="Tietotekniikka">Tietotekniikka</option>
+            <option value="Urheilu">Urheilu</option>
+            <option value="testing">testing</option>
+        </select></p>
     <p>
         <input type="submit" value="Lähetä">
     </p>
@@ -42,7 +54,12 @@
 
     function checkText(form) {
         if(form.topic.value == 0){
-            alert("Kirjoita aihe!")
+            alert("Kirjoita otsikko!")
+            return false;
+        }
+        console.log(form.theme.value)
+        if(form.theme.value == "unselected"){
+            alert("Valitse aihealue!")
             return false;
         }
         return true;

@@ -5,6 +5,14 @@ from db import db
 import db as database
 import user
 
+def addNewTopic(user_id, topic, info, pic_id, theme):
+    try:
+        sql = "INSERT INTO Topics (user_id, topic, info, pic_id, theme, time) VALUES (:user_id, :topic, :info, :pic_id, :theme, NOW())"
+        db.session.execute(sql, {"user_id": user_id, "topic": topic, "info": info, "pic_id": pic_id, "theme": theme})
+        db.session.commit()
+        return True
+    except:
+        return False
 
 def getTopicCount():
     sql = "SELECT COUNT(*) FROM Topics"
@@ -18,9 +26,11 @@ def getTopicsByMostMessages(topic_amount = 10):
     sql = "SELECT topic_id FROM Messages GROUP BY topic_id ORDER BY COUNT(id) LIMIT 10"
     return db.session.execute(sql).fetchall()
 
-def getLimitedAmountOfTopics(mista=0, mihin=10, order="vanhin ensin"):
+def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki"):
     # orders: "oldest", "newest", "most_messages", "most_visits", "last_messages"
     results = None
+    if theme == "Kaikki":
+        theme = None
     if order == "eniten viestejä":
         sql = "SELECT topic_id FROM Messages GROUP BY topic_id ORDER BY COUNT(id) LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista}).fetchall()
@@ -28,12 +38,12 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="vanhin ensin"):
             order = "oldest"
 
     if order == "vanhin ensin":
-        sql = "SELECT * FROM Topics LIMIT :mihin OFFSET :mista"
-        results = db.session.execute(sql, {"mihin": mihin, "mista": mista}).fetchall()
+        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme}).fetchall()
 
     if order == "uusin ensin":
-        sql = "SELECT * FROM Topics ORDER BY id DESC LIMIT :mihin OFFSET :mista"
-        results = db.session.execute(sql, {"mihin": mihin, "mista":mista}).fetchall()
+        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) ORDER BY id DESC LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme}).fetchall()
 
     if results is None:
         return None
