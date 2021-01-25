@@ -40,7 +40,6 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki"):
     if order == "vanhin ensin":
         sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme}).fetchall()
-
     if order == "uusin ensin":
         sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) ORDER BY id DESC LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme}).fetchall()
@@ -49,6 +48,7 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki"):
         return None
     li = []
     # 10 limit per sivu
+    print("RESULTS", results)
     if results != []:
         for i in range(len(results)):
             # (id, topic, info, user, time, pic_name, pic_data)
