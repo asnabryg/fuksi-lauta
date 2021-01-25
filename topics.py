@@ -14,9 +14,14 @@ def addNewTopic(user_id, topic, info, pic_id, theme):
     except:
         return False
 
-def getTopicCount():
-    sql = "SELECT COUNT(*) FROM Topics"
-    return db.session.execute(sql).fetchone()[0]
+def getTopicCount(theme="Kaikki", search=""):
+    parts = search.split(" ")
+    search = "|".join(parts)
+    search = "%(" + search + ")%"
+    if theme == "Kaikki":
+        theme = None
+    sql = "SELECT COUNT(*) FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search)"
+    return db.session.execute(sql, {"theme": theme, "search": search}).fetchone()[0]
 
 def getTopic(topic_id):
     sql = "SELECT * FROM Topics WHERE id=:topic_id"

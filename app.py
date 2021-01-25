@@ -23,13 +23,6 @@ def index():
         if x[1]:
             topics_per_page = x[0]
             break
-    offset = (session["current_page"] * topics_per_page) - topics_per_page
-    session["limit_offset"] = (topics_per_page, offset)
-    topic_count = t.getTopicCount()
-    if topic_count % topics_per_page == 0:
-        page_count = topic_count // topics_per_page
-    else:
-        page_count = topic_count // topics_per_page + 1
     if request.method == "GET":
         sort_method = "vanhin_ensin"
         for s in session["sort"]:
@@ -41,24 +34,30 @@ def index():
             if th[1]:
                 theme = th[0]
                 break
-        print("THEME", theme)
         # (id, topic, info, user, time, pic_name, pic_data)
+        offset = (session["current_page"] * topics_per_page) - topics_per_page
+        session["limit_offset"] = (topics_per_page, offset)
+        topic_count = t.getTopicCount(theme, session["search"])
+        if topic_count % topics_per_page == 0:
+            page_count = topic_count // topics_per_page
+        else:
+            page_count = topic_count // topics_per_page + 1
         topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method, theme, session["search"])
         for i in range(len(topics)):
             topic = list(topics[i])
             topic.append(database.getProfilePictureData(topic[3]))
             topic.append(t.getMessageCount(topic[0]))
             topics[i] = topic
-        print("topic_count:", t.getTopicCount())
-        print("page_count:", page_count)
-        print("topics_per_page", topics_per_page)
-        print("offset:", offset)
-        print("current_page:", session["current_page"])
+        # print("topic_count:", topic_count)
+        # print("page_count:", page_count)
+        # print("topics_per_page", topics_per_page)
+        # print("offset:", offset)
+        # print("current_page:", session["current_page"])
         session["last_page"] = "/"
         return render_template("index.html", topics=topics, page_count=page_count, current=session["current_page"])
     else:
-        search = request.form["search"]
-        session["search"] = search
+        if "search" in request.form:
+            session["search"] = request.form["search"]
         if "theme" in request.form:
             theme = request.form["theme"]
             for i in range(len(session["theme"])):
@@ -67,6 +66,7 @@ def index():
                     continue
                 session["theme"][i][1] = False
         if "page" in request.form:
+            print("PAGEEE")
             page = request.form["page"]
             if page == "seuraava":
                 session["current_page"] = session["current_page"] + 1
