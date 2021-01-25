@@ -33,8 +33,8 @@
         <input type="submit" value="päivitä">
     </form>
     
-    <hr>
     {% for topic in topics %}
+    <hr>
     <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data-->
         <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br><br>
         {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
@@ -56,9 +56,9 @@
         </div>
         {% endif %}
         {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}} <br>
-        <hr>
     {% endfor %}
 </p>
+{% if page_count > 1%}
 <div>
     sivut:
     <form action="/" method="POST">
@@ -115,4 +115,5 @@
         {% endif %}
     </form>
 </div>
+{% endif %}
 {% endblock %}

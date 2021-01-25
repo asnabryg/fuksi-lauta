@@ -27,7 +27,7 @@ Luonut:
         <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
             Kirjoita viesti:<br>
             <textarea name="message" rows="5" cols="60" maxlength="500"></textarea>
-            <div id="onJS" style="display: none"><span id="text_length">0</span>/2000 merkkiä</div>
+            <div id="onJS" style="display: none"><span id="text_length">0</span>/500 merkkiä</div>
             <br>Lisää kuva:<br>
             Tiedosto: <input type="file" name="file"><br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
             {% if notSucceed %}
