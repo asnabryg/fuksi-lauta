@@ -9,7 +9,7 @@ from app import app
 app.config["SQLALCHEMY_DATABASE_URI"] = getenv("DATABASE_URL")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SESSION_PERMANENT"] = False
-app.secret_key = urandom(16).hex()
+app.secret_key = getenv("SECRET_KEY")
 db = SQLAlchemy(app)
 
 import user
