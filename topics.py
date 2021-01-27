@@ -40,36 +40,53 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
     if theme == "Kaikki":
         theme = None
 
-    print("THEME, SEARCH", theme, search)
     if order == "eniten viestejä":
         # topic = (id, user_id, topic, info, time, pic_id, visits, theme)
-        sql = "SELECT T.* FROM Topics T LEFT JOIN Messages M ON M.topic_id=T.id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(M.*) DESC LIMIT :mihin OFFSET :mista"
+        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN Messages M, TopicLikes TL ON M.topic_id=T.id AND T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(M.*) DESC LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
         if results == []:
             order = "vanhin ensin"
 
     if order == "vanhin ensin":
-        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search) LIMIT :mihin OFFSET :mista"
+        sql = "SELECT T.*, sum(case when TL.vote=1 then 1 else 0 end), sum(case when TL.vote=0 then 1 else 0 end) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
     if order == "uusin ensin":
-        sql = "SELECT * FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search) ORDER BY id DESC LIMIT :mihin OFFSET :mista"
+        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN TopicLikes TL ON T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) ORDER BY T.id DESC LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme, "search": search}).fetchall()
 
     if results is None:
         return None
-    li = []
+    palautus = []
     # 10 limit per sivu
-    print("RESULTS", results)
+    print("TOPIC RESULTS", results)
+    # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
     if results != []:
+        user_votes = None
+        if "user" in session:
+            topic_ids = ([t[0] for t in results])
+            sql = "SELECT topic_id, vote FROM TopicLikes WHERE user_id=:user_id AND topic_id= ANY(:topic_ids)"
+            user_votes = db.session.execute(sql, {"user_id": session["user_id"], "topic_ids": topic_ids}).fetchall()
+            print("USER_VOTES_TUPLE", user_votes)
         for i in range(len(results)):
-            # (id, topic, info, user, time, pic_name, pic_data)
             pic_name = None
             pic_data = None
-            if results[i][5] != None:
+            username = user.getUsername(results[i][1])
+            if results[i][5] != None: # Jos topicissa on kuva, haetaan kuvan nimi ja data
                 pic_name = database.getPictureName(results[i][5])
                 pic_data = database.getPictureData(results[i][5])
-            li.append((results[i][0], results[i][2], results[i][3], user.getUsername(results[i][1]), results[i][4], pic_name, pic_data))
-    return li
+            profile_pic_data = database.getProfilePictureData(username)
+            message_count = getMessageCount(results[i][0])
+            vote = None
+            if user_votes != None:
+                for v in user_votes: # haetaan käyttäjän tykkäys, None jos ei ole kirjautunut tai ei ole tykännyt aiheesta
+                    if v[0] == results[i][0]:
+                        vote = v[1]
+            palautus.append((results[i][0], results[i][2], results[i][3],
+                             username, results[i][4],
+                             pic_name, pic_data, profile_pic_data, results[i][8], results[i][9], message_count, vote))
+    # (id, topic, info, user, time, pic_name, pic_data, profile_pic_data, upvotes, downvotes, message_count, vote)
+    return palautus
+
 
 def removeTopic(topic_id):
     try:
@@ -83,3 +100,21 @@ def removeTopic(topic_id):
 def getMessageCount(topic_id):
     sql = "SELECT COUNT(*) FROM Messages WHERE topic_id=:topic_id"
     return db.session.execute(sql, {"topic_id":topic_id}).fetchone()[0]
+
+def getUserTopivVote(user_id):
+    sql = ""
+
+def setVoteToTopic(topic_id, user_id, vote):
+    # tarkistetaan ensin onko jo tykätty
+    sql = "SELECT vote FROM TopicLikes WHERE user_id=:user_id AND topic_id=:topic_id"
+    result = db.session.execute(sql, {"user_id": user_id, "topic_id": topic_id}).fetchone()
+    print("VOTE RESULT", result)
+    if result == None:
+        sql = "INSERT INTO TopicLikes (topic_id, user_id, vote) VALUES (:topic_id, :user_id, :vote)"
+    else:
+        # jos result ja vote on samoja, poistetaan tykkäys
+        if result[0] == 1 and vote == 1 or result[0] == 0 and vote == 0:
+            vote = None
+        sql = "UPDATE TopicLikes SET vote=:vote WHERE user_id=:user_id AND topic_id=:topic_id"
+    db.session.execute(sql, {"topic_id": topic_id, "user_id": user_id, "vote": vote})
+    db.session.commit()

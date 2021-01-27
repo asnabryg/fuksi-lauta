@@ -48,7 +48,7 @@
     
     {% for topic in topics %}
     <hr>
-    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: message_count-->
+    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: upvotes, 9: downvotes, 10:message_count, 11: vote-->
         <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br><br>
         {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
             {{topic[2]}} <br>
@@ -69,7 +69,35 @@
         </div>
         {% endif %}
         {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M")}} <br>
-        Viestejä: {{topic[8]}} kpl
+        Viestejä: {{topic[10]}} kpl<br>
+        {% if 'user' in session %}
+            <form action="/topic_like" method="POST">
+                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+                {{topic[8]}}
+                {% if topic[11] == None or topic[11] == 0%}
+                    <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                {% elif topic[11] == 1 %}
+                    <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
+                {% endif %}
+                {{topic[9]}}
+                {% if topic[11] == None or topic[11] == 1%}
+                    <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                        style="width: 25px; transform: rotate(180deg);" />
+                {% elif topic[11] == 0 %}
+                    <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
+                        style="width: 25px; transform: rotate(180deg);" />
+                {% endif %}
+            </form>
+        {% else %}
+            <form action="/login" method="GET">
+                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+                {{topic[8]}}
+                <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                {{topic[9]}}
+                <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                    style="width: 25px; transform: rotate(180deg);" />
+            </form>
+        {% endif %}
     {% endfor %}
 </p>
 {% if page_count > 1%}

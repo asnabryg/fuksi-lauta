@@ -7,7 +7,7 @@ from sqlalchemy.sql.elements import Null
 from werkzeug.security import check_password_hash, generate_password_hash
 from zlib import compress
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path="/static")
 
 import db as database
 from db import db
@@ -15,16 +15,18 @@ import user
 import topics as t
 import messages as m
 
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     check_info()
-    topics_per_page = 10
-    for x in session["topics_per_page"]:
-        if x[1]:
-            topics_per_page = x[0]
-            break
     if request.method == "GET":
         sort_method = "vanhin_ensin"
+        topics_per_page = 10
+        for x in session["topics_per_page"]:
+            if x[1]:
+                topics_per_page = x[0]
+                break
         for s in session["sort"]:
             if s[1]:
                 sort_method = s[0]
@@ -34,20 +36,17 @@ def index():
             if th[1]:
                 theme = th[0]
                 break
-        # (id, topic, info, user, time, pic_name, pic_data)
+        # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
         offset = (session["current_page"] * topics_per_page) - topics_per_page
         session["limit_offset"] = (topics_per_page, offset)
         topic_count = t.getTopicCount(theme, session["search"])
-        if topic_count % topics_per_page == 0:
+        if topic_count % topics_per_page == 0: # laskee kuinka monta sivua topicceja on
             page_count = topic_count // topics_per_page
         else:
             page_count = topic_count // topics_per_page + 1
         topics = t.getLimitedAmountOfTopics(offset, topics_per_page, sort_method, theme, session["search"])
-        for i in range(len(topics)):
-            topic = list(topics[i])
-            topic.append(database.getProfilePictureData(topic[3]))
-            topic.append(t.getMessageCount(topic[0]))
-            topics[i] = topic
+        # print("TOPIC INDEXISSÄ", topics)
+        # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes, message_count)
         # print("topic_count:", topic_count)
         # print("page_count:", page_count)
         # print("topics_per_page", topics_per_page)
@@ -66,7 +65,6 @@ def index():
                     continue
                 session["theme"][i][1] = False
         if "page" in request.form:
-            print("PAGEEE")
             page = request.form["page"]
             if page == "seuraava":
                 session["current_page"] = session["current_page"] + 1
@@ -116,13 +114,10 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
         if user.login(username, password):
-            print("LAST PAGE", session["last_page"])
             if "topic" in session["last_page"]:
-                print("ASDASDSADASDAS")
                 last = session["last_page"]
                 session["last_page"] = "/login"
                 return redirect(last)
-            print("EIEIEIE")
             session["last_page"] = "/login"
             return redirect("/")
         else:
@@ -325,6 +320,17 @@ def remove_topic():
     if t.removeTopic(topic_id):
         return redirect("/")
     return render_template("error.html", page="/topic" + str(topic_id), error="Langan poistaminen epäonnistui", error_message="Yritä myöhemmin uudelleen.")
+
+@app.route("/topic_like", methods=["POST"])
+def topic_like():
+    topic_id = request.form["topic_id"]
+    if "upvote.x" in request.form:
+        vote = 1
+    else:
+        vote = 0
+    t.setVoteToTopic(topic_id, session["user_id"], vote)
+    return redirect("/")
+
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
