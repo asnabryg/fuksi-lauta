@@ -42,7 +42,7 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
 
     if order == "eniten viestejä":
         # topic = (id, user_id, topic, info, time, pic_id, visits, theme)
-        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN Messages M, TopicLikes TL ON M.topic_id=T.id AND T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(M.*) DESC LIMIT :mihin OFFSET :mista"
+        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN Messages M ON M.topic_id=T.id LEFT JOIN TopicLikes TL ON T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(M.*) DESC LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
         if results == []:
             order = "vanhin ensin"
@@ -51,7 +51,7 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
         sql = "SELECT T.*, sum(case when TL.vote=1 then 1 else 0 end), sum(case when TL.vote=0 then 1 else 0 end) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
     if order == "uusin ensin":
-        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN TopicLikes TL ON T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) ORDER BY T.id DESC LIMIT :mihin OFFSET :mista"
+        sql = "SELECT T.*, sum(case when TL.vote=1 then 1 else 0 end), sum(case when TL.vote=0 then 1 else 0 end) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id AND T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY T.id desc LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme, "search": search}).fetchall()
 
     if results is None:
