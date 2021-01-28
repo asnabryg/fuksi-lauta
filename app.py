@@ -323,6 +323,10 @@ def remove_topic():
 
 @app.route("/topic_like", methods=["POST"])
 def topic_like():
+    if "scrollPos" in request.form:
+        scrollPos = request.form["scrollPos"]
+        print("SCROLL_POS", scrollPos)
+        session["scrollPos"] = scrollPos
     topic_id = request.form["topic_id"]
     if "upvote.x" in request.form:
         vote = 1
@@ -338,6 +342,8 @@ def check_info():
     # Tarkistaa milloin viimeksi käyty sivulla
     # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
     user.is_admin()
+    if "scrollPos" not in session:
+        session["scrollPos"] = 0
     if "search" not in session:
         session["search"] = ""
     if "theme" not in session:
