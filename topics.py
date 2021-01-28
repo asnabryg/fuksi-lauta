@@ -1,9 +1,11 @@
 import re
+from flask import app
 from flask.globals import session
 from werkzeug.security import check_password_hash, generate_password_hash
 from db import db
 import db as database
 import user
+
 
 def addNewTopic(user_id, topic, info, pic_id, theme):
     try:
@@ -13,6 +15,7 @@ def addNewTopic(user_id, topic, info, pic_id, theme):
         return True
     except:
         return False
+
 
 def getTopicCount(theme="Kaikki", search=""):
     parts = search.split(" ")
@@ -81,9 +84,9 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
                 for v in user_votes: # haetaan käyttäjän tykkäys, None jos ei ole kirjautunut tai ei ole tykännyt aiheesta
                     if v[0] == results[i][0]:
                         vote = v[1]
-            palautus.append((results[i][0], results[i][2], results[i][3],
+            palautus.append([results[i][0], results[i][2], results[i][3],
                              username, results[i][4],
-                             pic_name, pic_data, profile_pic_data, results[i][8], results[i][9], message_count, vote))
+                             pic_name, pic_data, profile_pic_data, results[i][8], results[i][9], message_count, vote])
     # (id, topic, info, user, time, pic_name, pic_data, profile_pic_data, upvotes, downvotes, message_count, vote)
     return palautus
 
@@ -104,17 +107,32 @@ def getMessageCount(topic_id):
 def getUserTopivVote(user_id):
     sql = ""
 
-def setVoteToTopic(topic_id, user_id, vote):
+def setVoteToTopic(topic_id, user_id, vote, topic_index = None):
     # tarkistetaan ensin onko jo tykätty
     sql = "SELECT vote FROM TopicLikes WHERE user_id=:user_id AND topic_id=:topic_id"
     result = db.session.execute(sql, {"user_id": user_id, "topic_id": topic_id}).fetchone()
     print("VOTE RESULT", result)
+    index_and_vote = None
     if result == None:
+        if vote == 1:
+            index_and_vote = [8, 1]
+        if vote == 0:
+            index_and_vote = [9, 1]
         sql = "INSERT INTO TopicLikes (topic_id, user_id, vote) VALUES (:topic_id, :user_id, :vote)"
     else:
         # jos result ja vote on samoja, poistetaan tykkäys
-        if result[0] == 1 and vote == 1 or result[0] == 0 and vote == 0:
+        if result[0] == 1 and vote == 1:
+            index_and_vote = [8, -1]
             vote = None
+        elif vote == 1:
+            index_and_vote = [8, 1]
+        if result[0] == 0 and vote == 0:
+            index_and_vote = [9, -1]
+            vote = None
+        elif vote == 0:
+            index_and_vote = [9, 1]
         sql = "UPDATE TopicLikes SET vote=:vote WHERE user_id=:user_id AND topic_id=:topic_id"
+    index_and_vote.append(vote)  # vote_index, change value, vote=None/1/0
     db.session.execute(sql, {"topic_id": topic_id, "user_id": user_id, "vote": vote})
     db.session.commit()
+    return index_and_vote # palauttaa vote_indexin ja +- arvon, jolla voidaan poistaa/lisaa vote muistissaolleessa topicciin

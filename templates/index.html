@@ -49,56 +49,58 @@
         <input type="submit" value="päivitä">
     </form>
     
-    {% for topic in topics %}
+    {% for i in range(topics|length) %}
     <hr>
     <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: upvotes, 9: downvotes, 10:message_count, 11: vote-->
-        <a href="/topic{{topic[0]}}"><b>{{topic[1]}}</b></a> <br><br>
-        {% if 100 > topic[2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
-            {{topic[2]}} <br>
+        <a href="/topic{{topics[i][0]}}"><b>{{topics[i][1]}}</b></a> <br><br>
+        {% if 100 > topics[i][2]|length %} <!-- esikatselu on 100 merkkiä pitkä -->
+            {{topics[i][2]}} <br>
         {% else %}
-            {{topic[2][:100] + " ..."}}
+            {{topics[i][2][:100] + " ..."}}
         {% endif %}
 
-        {% if topic[5] != None %}
+        {% if topics[i][5] != None %}
             <div style="width: 128px; height: 128px;">
-                <img src="data:image/jpeg;base64,{{topic[6]}}" alt="{{topic[5]}}" style="width: inherit">
+                <img src="data:image/jpeg;base64,{{topics[i][6]}}" alt="{{topics[i][5]}}" style="width: inherit">
             </div>
         {% endif %}
         <br>
         luonut:
-        {% if topic[7] != None %}
+        {% if topics[i][7] != None %}
         <div style="width: 15px; height: 15px; display: inline;">
-            <img src="data:image/jpeg;base64,{{topic[7]}}" alt="Profiilikuva" style="width: inherit">
+            <img src="data:image/jpeg;base64,{{topics[i][7]}}" alt="Profiilikuva" style="width: inherit">
         </div>
         {% endif %}
-        {{topic[3]}}, {{topic[4].strftime("%Y-%m-%d %H:%M")}} <br>
-        Viestejä: {{topic[10]}} kpl<br>
+        {{topics[i][3]}}, {{topics[i][4].strftime("%Y-%m-%d %H:%M")}} <br>
+        Viestejä: {{topics[i][10]}} kpl<br>
         {% if 'user' in session %}
-            <form action="/topic_like" method="POST" onsubmit="return getScrollPos(this)">
-                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+            <form action="/" method="POST" onsubmit="return getScrollPos(this)">
+                <input type="hidden" name="topic_index" value="{{i}}">
+                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
                 <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                {{topic[8]}}
-                {% if topic[11] == None or topic[11] == 0%}
+                <input type="hidden" name="topics" value="{{topics}}">
+                {{topics[i][8]}}
+                {% if topics[i][11] == None or topics[i][11] == 0%}
                     <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                {% elif topic[11] == 1 %}
+                {% elif topics[i][11] == 1 %}
                     <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
                 {% endif %}
-                {{topic[9]}}
-                {% if topic[11] == None or topic[11] == 1%}
+                {{topics[i][9]}}
+                {% if topics[i][11] == None or topics[i][11] == 1%}
                     <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
                         style="width: 25px; transform: rotate(180deg);" />
-                {% elif topic[11] == 0 %}
+                {% elif topics[i][11] == 0 %}
                     <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
                         style="width: 25px; transform: rotate(180deg);" />
                 {% endif %}
             </form>
         {% else %}
-            <form action="/login" method="GET" onsubmit="return getScrollPos()">
-                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+            <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
                 <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                {{topic[8]}}
+                {{topics[i][8]}}
                 <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                {{topic[9]}}
+                {{topics[i][9]}}
                 <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
                     style="width: 25px; transform: rotate(180deg);" />
             </form>
