@@ -61,7 +61,6 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
         return None
     palautus = []
     # 10 limit per sivu
-    print("TOPIC RESULTS", results)
     # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
     if results != []:
         user_votes = None
@@ -69,7 +68,6 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
             topic_ids = ([t[0] for t in results])
             sql = "SELECT topic_id, vote FROM TopicLikes WHERE user_id=:user_id AND topic_id= ANY(:topic_ids)"
             user_votes = db.session.execute(sql, {"user_id": session["user_id"], "topic_ids": topic_ids}).fetchall()
-            print("USER_VOTES_TUPLE", user_votes)
         for i in range(len(results)):
             pic_name = None
             pic_data = None
@@ -111,7 +109,6 @@ def setVoteToTopic(topic_id, user_id, vote, topic_index = None):
     # tarkistetaan ensin onko jo tykätty
     sql = "SELECT vote FROM TopicLikes WHERE user_id=:user_id AND topic_id=:topic_id"
     result = db.session.execute(sql, {"user_id": user_id, "topic_id": topic_id}).fetchone()
-    print("VOTE RESULT", result)
     index_and_vote = None
     if result == None:
         if vote == 1:

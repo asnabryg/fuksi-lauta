@@ -32,7 +32,6 @@ def index(voted = False):
     global g_topics
     if "clear_gt" in session:
         if session["clear_gt"]: # jos g_topics pitää tyhjentää, esim jos on kirjauduttu ulos
-            print("WTF")
             g_topics = None
             session["clear_gt"] = False
     check_info()
@@ -41,10 +40,8 @@ def index(voted = False):
         method = "GET"
     else:
         method = request.method
-    print("METHOD", method)
     if method == "GET":
         if g_topics == None:  # jos topicit jo muistissa, ei tarvetta hake niitä uudelleen tietokannasta
-            print("EI TÄNNE")
             sort_method = "vanhin_ensin"
             session["scrollPos"] = 0
             topics_per_page = 10
@@ -80,10 +77,6 @@ def index(voted = False):
             # print("offset:", offset)
             # print("current_page:", session["current_page"])
             session["last_page"] = "/"
-        else:
-            print("JOO TÄNNE")
-            print("TOPICS", type(g_topics))
-        print("RENDER")
         return render_template("index.html",
                                topics=g_topics,
                                page_count=session["page_count"],
@@ -94,14 +87,12 @@ def index(voted = False):
             session["scrollPos"] = scrollPos
             topic_id = request.form["topic_id"]
             topic_index  = request.form["topic_index"]
-            print("PT", type(g_topics))
             if "upvote.x" in request.form:
                 vote = 1
             else:
                 vote = 0
             index_and_vote = t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
             if g_topics is not None:
-                print("VOTE JUTTUJA", g_topics[int(topic_index)], "index_vote", index_and_vote)
                 if index_and_vote[2] == 1:
                     if g_topics[int(topic_index)][11] != None:
                         g_topics[int(topic_index)][9] -= 1
@@ -110,7 +101,6 @@ def index(voted = False):
                         g_topics[int(topic_index)][8] -= 1
                 g_topics[int(topic_index)][11] = index_and_vote[2]
                 g_topics[int(topic_index)][index_and_vote[0]] += index_and_vote[1] #muuttaa muistissa olleen topicin vote arvoa tässä, koska topicceja ei ladata uudelleen voten jälkeen
-            print("REDIRECT")
             return redirect(url_for("index", voted=True))
         else:
             g_topics = None
@@ -155,11 +145,8 @@ def index(voted = False):
 def login():
     if "scrollPos" in request.form:
         scrollPos = request.form["scrollPos"]
-        print("SCROLL_POS", scrollPos)
         session["scrollPos"] = scrollPos
-    print("LAST PAGE", session["last_page"])
     check_info()
-    print("LAST PAGE", session["last_page"])
     user.is_admin() # tarkastaa onko admin
     if "user" in session:
         # jos käyttäjä jo kirjautunut sisään, ei tarvetta kirjautumis sivulle.
@@ -358,9 +345,7 @@ def newTopic():
             # jos JavaScript ei ole päällä, sivu ei tarkasta onko aihealue valittu
             theme = "Satunnainen"
         pic_id = None
-        print("lisääkö kuvan?")
         if file.filename != "":
-            print("lisäsi kuvan")
             permission_id = request.form["permission_id"]
             saved = database.savePicture(file, permission_id)
             if not saved[0]:
@@ -393,7 +378,6 @@ def remove_topic():
 def topic_like():
     if "scrollPos" in request.form:
         scrollPos = request.form["scrollPos"]
-        print("SCROLL_POS", scrollPos)
         session["scrollPos"] = scrollPos
     topic_id = request.form["topic_id"]
     if "upvote.x" in request.form:
