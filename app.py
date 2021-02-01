@@ -24,10 +24,7 @@ import topics as t
 @app.route("/", methods=["GET", "POST"])
 def index():
     check_info()
-    # jos topicit jo muistissa ja vain tykätty topicista, ei tarvetta hakea samoja topicceja tietokannasta
     if request.method == "GET":
-        print("GET")  # jos topicit jo muistissa, ei tarvetta hake niitä uudelleen tietokannasta
-        print("g_topics empty")
         sort_method = "vanhin_ensin"
         topics_per_page = 10
         for x in session["topics_per_page"]:
@@ -62,7 +59,6 @@ def index():
         # print("offset:", offset)
         # print("current_page:", session["current_page"])
         session["last_page"] = "/"
-        print("SCROLLPOS", session["scrollPos"])
         return render_template("index.html",
                                topics=g_topics,
                                page_count=session["page_count"],
@@ -70,7 +66,6 @@ def index():
     else:
         if "scrollPos" in request.form:
             scrollPos = request.form["scrollPos"]
-            print("scroll", scrollPos)
             session["scrollPos"] = scrollPos
             topic_id = request.form["topic_id"]
             topic_index  = request.form["topic_index"]
@@ -78,7 +73,6 @@ def index():
                 vote = 1
             else:
                 vote = 0
-            print("VOTE", vote)
             t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
             return redirect("/")
         else:
