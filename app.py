@@ -5,6 +5,7 @@ from flask import Flask, app
 from flask import redirect, render_template, request
 from flask.globals import session
 from flask.helpers import url_for
+from sqlalchemy.orm.session import sessionmaker
 from sqlalchemy.sql import elements
 from sqlalchemy.sql.elements import Null
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -28,7 +29,6 @@ def index():
         print("GET")  # jos topicit jo muistissa, ei tarvetta hake niitä uudelleen tietokannasta
         print("g_topics empty")
         sort_method = "vanhin_ensin"
-        session["scrollPos"] = 0
         topics_per_page = 10
         for x in session["topics_per_page"]:
             if x[1]:
@@ -62,6 +62,7 @@ def index():
         # print("offset:", offset)
         # print("current_page:", session["current_page"])
         session["last_page"] = "/"
+        print("SCROLLPOS", session["scrollPos"])
         return render_template("index.html",
                                topics=g_topics,
                                page_count=session["page_count"],
@@ -69,6 +70,7 @@ def index():
     else:
         if "scrollPos" in request.form:
             scrollPos = request.form["scrollPos"]
+            print("scroll", scrollPos)
             session["scrollPos"] = scrollPos
             topic_id = request.form["topic_id"]
             topic_index  = request.form["topic_index"]
@@ -80,6 +82,7 @@ def index():
             t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
             return redirect("/")
         else:
+            session["scrollPos"] = 0
             if "search" in request.form:
                 session["search"] = request.form["search"]
             if "theme" in request.form:
