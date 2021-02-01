@@ -56,6 +56,7 @@ def index(voted = False):
             theme = "Kaikki"
             for th in session["theme"]:
                 if th[1]:
+                    print("test")
                     theme = th[0]
                     break
             # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
