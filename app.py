@@ -56,7 +56,6 @@ def index(voted = False):
             theme = "Kaikki"
             for th in session["theme"]:
                 if th[1]:
-                    print("test")
                     theme = th[0]
                     break
             # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
@@ -403,10 +402,10 @@ def check_info():
     if "theme" not in session:
         session["theme"] = [["Kaikki", True], ["Satunnainen", False],
                             ["Autot", False], ["Harrastukset", False],
-                            ["Musiikki", False], ["Pelit", False],
-                            ["Ruoka", False], ["Tietokoneet", False],
-                            ["Tietotekniikka", False], ["Urheilu", False],
-                            ["testing", False]]
+                            ["Musiikki", False], ["Opiskelu", False],
+                            ["Pelit", False], ["Ruoka", False],
+                            ["Tietokoneet", False], ["Tietotekniikka", False],
+                            ["Urheilu", False], ["testing", False]]
     if "last_page" not in session:
         session["lsat_page"] = "/"
     if "topics_per_page" not in session:
