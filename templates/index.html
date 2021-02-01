@@ -169,7 +169,11 @@
 <script>
 
     var start_scroll_pos = document.getElementById("getPos").value
-    window.scrollTo(0, start_scroll_pos)
+    console.log(start_scroll_pos)
+    setTimeout(function (){
+        window.scrollTo(0, start_scroll_pos)
+    });
+    console.log(start_scroll_pos)
 
     function getScrollPos(form){
         var scroll_position = document.documentElement.scrollTop || document.body.scrollTop

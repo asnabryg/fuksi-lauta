@@ -59,7 +59,7 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
 
     if results is None:
         return None
-        
+
     palautus = []
     # 10 limit per sivu
     # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
@@ -95,6 +95,7 @@ def removeTopic(topic_id):
         sql = "DELETE FROM Topics WHERE id=:topic_id"
         db.session.execute(sql, {"topic_id":topic_id})
         db.session.commit()
+        session["clear_gt"] = True
         return True
     except:
         return False
@@ -102,9 +103,6 @@ def removeTopic(topic_id):
 def getMessageCount(topic_id):
     sql = "SELECT COUNT(*) FROM Messages WHERE topic_id=:topic_id"
     return db.session.execute(sql, {"topic_id":topic_id}).fetchone()[0]
-
-def getUserTopivVote(user_id):
-    sql = ""
 
 def setVoteToTopic(topic_id, user_id, vote, topic_index = None):
     # tarkistetaan ensin onko jo tykätty

@@ -8,75 +8,60 @@ from flask.helpers import url_for
 from sqlalchemy.sql import elements
 from sqlalchemy.sql.elements import Null
 from werkzeug.security import check_password_hash, generate_password_hash
-from zlib import compress
-import inspect
 
 
 app = Flask(__name__, static_url_path="/static")
 
 import db as database
-from db import db, savePicture
+from db import db
 import user
 import messages as m
 
-global global_topics
-global_topics = None
-
 import topics as t
-
-from app import global_topics as g_topics
 
 
 @app.route("/", methods=["GET", "POST"])
-def index(voted = False):
-    global g_topics
-    if "clear_gt" in session:
-        if session["clear_gt"]: # jos g_topics pitää tyhjentää, esim jos on kirjauduttu ulos
-            g_topics = None
-            session["clear_gt"] = False
+def index():
     check_info()
     # jos topicit jo muistissa ja vain tykätty topicista, ei tarvetta hakea samoja topicceja tietokannasta
-    if voted:
-        method = "GET"
-    else:
-        method = request.method
-    if method == "GET":
-        if g_topics == None:  # jos topicit jo muistissa, ei tarvetta hake niitä uudelleen tietokannasta
-            sort_method = "vanhin_ensin"
-            session["scrollPos"] = 0
-            topics_per_page = 10
-            for x in session["topics_per_page"]:
-                if x[1]:
-                    topics_per_page = x[0]
-                    break
-            for s in session["sort"]:
-                if s[1]:
-                    sort_method = s[0]
-                    break
-            theme = "Kaikki"
-            for th in session["theme"]:
-                if th[1]:
-                    theme = th[0]
-                    break
-            # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
-            offset = (session["current_page"] * topics_per_page) - topics_per_page
-            session["limit_offset"] = (topics_per_page, offset)
-            topic_count = t.getTopicCount(theme, session["search"])
-            if topic_count % topics_per_page == 0: # laskee kuinka monta sivua topicceja on
-                session["page_count"] = topic_count // topics_per_page
-            else:
-                session["page_count"] = topic_count // topics_per_page + 1
-            g_topics = t.getLimitedAmountOfTopics(offset, topics_per_page,
-                                                      sort_method, theme,
-                                                      session["search"])
-            # print("TOPIC INDEXISSÄ", topics)
-            # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes, message_count)
-            # print("topic_count:", topic_count)
-            # print("page_count:", page_count)
-            # print("topics_per_page", topics_per_page)
-            # print("offset:", offset)
-            # print("current_page:", session["current_page"])
-            session["last_page"] = "/"
+    if request.method == "GET":
+        print("GET")  # jos topicit jo muistissa, ei tarvetta hake niitä uudelleen tietokannasta
+        print("g_topics empty")
+        sort_method = "vanhin_ensin"
+        session["scrollPos"] = 0
+        topics_per_page = 10
+        for x in session["topics_per_page"]:
+            if x[1]:
+                topics_per_page = x[0]
+                break
+        for s in session["sort"]:
+            if s[1]:
+                sort_method = s[0]
+                break
+        theme = "Kaikki"
+        for th in session["theme"]:
+            if th[1]:
+                theme = th[0]
+                break
+        # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes)
+        offset = (session["current_page"] * topics_per_page) - topics_per_page
+        session["limit_offset"] = (topics_per_page, offset)
+        topic_count = t.getTopicCount(theme, session["search"])
+        if topic_count % topics_per_page == 0: # laskee kuinka monta sivua topicceja on
+            session["page_count"] = topic_count // topics_per_page
+        else:
+            session["page_count"] = topic_count // topics_per_page + 1
+        g_topics = t.getLimitedAmountOfTopics(offset, topics_per_page,
+                                                    sort_method, theme,
+                                                    session["search"])
+        # print("TOPIC INDEXISSÄ", topics)
+        # (id, topic, info, user, time, pic_name, pic_data, upvotes, downvotes, message_count)
+        # print("topic_count:", topic_count)
+        # print("page_count:", page_count)
+        # print("topics_per_page", topics_per_page)
+        # print("offset:", offset)
+        # print("current_page:", session["current_page"])
+        session["last_page"] = "/"
         return render_template("index.html",
                                topics=g_topics,
                                page_count=session["page_count"],
@@ -91,19 +76,10 @@ def index(voted = False):
                 vote = 1
             else:
                 vote = 0
-            index_and_vote = t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
-            if g_topics is not None:
-                if index_and_vote[2] == 1:
-                    if g_topics[int(topic_index)][11] != None:
-                        g_topics[int(topic_index)][9] -= 1
-                elif index_and_vote[2] == 0:
-                    if g_topics[int(topic_index)][11] != None:
-                        g_topics[int(topic_index)][8] -= 1
-                g_topics[int(topic_index)][11] = index_and_vote[2]
-                g_topics[int(topic_index)][index_and_vote[0]] += index_and_vote[1] #muuttaa muistissa olleen topicin vote arvoa tässä, koska topicceja ei ladata uudelleen voten jälkeen
-            return redirect(url_for("index", voted=True))
+            print("VOTE", vote)
+            t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
+            return redirect("/")
         else:
-            g_topics = None
             if "search" in request.form:
                 session["search"] = request.form["search"]
             if "theme" in request.form:
