@@ -25,7 +25,7 @@ import topics as t
 def index():
     check_info()
     if request.method == "GET":
-        sort_method = "vanhin_ensin"
+        sort_method = "uusin_ensin"
         topics_per_page = 10
         for x in session["topics_per_page"]:
             if x[1]:
@@ -68,12 +68,11 @@ def index():
             scrollPos = request.form["scrollPos"]
             session["scrollPos"] = scrollPos
             topic_id = request.form["topic_id"]
-            topic_index  = request.form["topic_index"]
             if "upvote.x" in request.form:
                 vote = 1
             else:
                 vote = 0
-            t.setVoteToTopic(topic_id, session["user_id"], vote, topic_index)
+            t.setVoteToTopic(topic_id, session["user_id"], vote)
             return redirect("/")
         else:
             session["scrollPos"] = 0
@@ -267,19 +266,42 @@ def changeProfilePic():
 @app.route("/topic<int:id>", methods=["GET", "POST"])
 def topic(id):
     check_info()
-    topic = list(t.getTopic(id)) # 0:topic_id, 1:user_id, 2:topic, 3:info, 4:time, 5:pic_id, 6:visits
+    topic = t.getTopic(id)
+    try:
+        vote = topic[1][0]
+    except:
+        vote = None
+    topic = list(topic[0]) # 0:topic_id, 1:user_id, 2:topic, 3:info, 4:time, 5:pic_id, 6:visits, 7:theme 8: upvotes, 9: downvotes, 10:vote
+    topic.append(vote)
     creator = user.getUsername(topic[1])
-    topic.append(None) # nyt listan järjestys ei mee rikki, vaikka kuvaa ei olisi
     if topic[5] != None:
         pic_data = database.getPictureData(topic[5])
         pic_name = database.getPictureName(topic[5])
-        topic[7] = pic_data
-        topic[5] = pic_name
+        topic[5] = (pic_name, pic_data)
     topic[1] = creator
     topic.append(database.getProfilePictureData(creator))
     # Nyt topic on
-    # [topic_id, username, topic, info, time, pic_name, pic_data, creator_profile_pic_data]
+    # [topic_id, username, topic, info, time, (pic_name, pic_data), visits, theme, upvotes, downvotes, vote, creator_profile_pic_data]
     if request.method == "POST":
+        if "scrollPos" in request.form:
+            print("tykkäsy")
+            scrollPos = request.form["scrollPos"]
+            session["scrollPos"] = scrollPos
+            if "topic_id" in request.form:
+                topic_id = request.form["topic_id"]
+                if "upvote.x" in request.form:
+                    vote = 1
+                else:
+                    vote = 0
+                t.setVoteToTopic(topic_id, session["user_id"], vote)
+            elif "message_id" in request.form:
+                message_id = request.form["message_id"]
+                if "upvote.x" in request.form:
+                    vote = 1
+                else:
+                    vote = 0
+                m.setVoteToMessage(message_id, session["user_id"], vote)
+            return redirect("/topic" + str(id))
         if "message" in request.form:
             # Viestin lähetys
             message = request.form["message"]

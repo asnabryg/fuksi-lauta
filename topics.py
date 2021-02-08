@@ -20,15 +20,20 @@ def addNewTopic(user_id, topic, info, pic_id, theme):
 def getTopicCount(theme="Kaikki", search=""):
     parts = search.split(" ")
     search = "|".join(parts)
-    search = "%(" + search + ")%"
+    search = "%(" + search.lower() + ")%"
     if theme == "Kaikki":
         theme = None
     sql = "SELECT COUNT(*) FROM Topics WHERE theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE theme END) AND (LOWER(topic) SIMILAR TO :search OR LOWER(info) SIMILAR TO :search)"
     return db.session.execute(sql, {"theme": theme, "search": search}).fetchone()[0]
 
 def getTopic(topic_id):
-    sql = "SELECT * FROM Topics WHERE id=:topic_id"
-    return db.session.execute(sql, {"topic_id": topic_id}).fetchone()
+    user_votes = None
+    if "user" in session:
+        sql = "SELECT vote FROM TopicLikes WHERE user_id=:user_id AND topic_id=:topic_id"
+        user_votes = db.session.execute(sql, {"user_id": session["user_id"], "topic_id": topic_id}).fetchone()
+    sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN TopicLikes TL ON TL.topic_id=T.id WHERE T.id=:topic_id GROUP BY T.id"
+    result =  db.session.execute(sql, {"topic_id": topic_id}).fetchone()
+    return result, user_votes
 
 def getTopicsByMostMessages(topic_amount = 10):
     sql = "SELECT topic_id FROM Messages GROUP BY topic_id ORDER BY COUNT(id) LIMIT 10"
@@ -38,7 +43,7 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
     # orders: "oldest", "newest", "most_messages", "most_visits", "last_messages"
     parts = search.split(" ")
     search = "|".join(parts)
-    search = "%(" + search + ")%"
+    search = "%(" + search.lower() + ")%"
     results = None
     if theme == "Kaikki":
         theme = None
@@ -104,31 +109,18 @@ def getMessageCount(topic_id):
     sql = "SELECT COUNT(*) FROM Messages WHERE topic_id=:topic_id"
     return db.session.execute(sql, {"topic_id":topic_id}).fetchone()[0]
 
-def setVoteToTopic(topic_id, user_id, vote, topic_index = None):
+def setVoteToTopic(topic_id, user_id, vote):
     # tarkistetaan ensin onko jo tykätty
     sql = "SELECT vote FROM TopicLikes WHERE user_id=:user_id AND topic_id=:topic_id"
     result = db.session.execute(sql, {"user_id": user_id, "topic_id": topic_id}).fetchone()
-    index_and_vote = None
     if result == None:
-        if vote == 1:
-            index_and_vote = [8, 1]
-        if vote == 0:
-            index_and_vote = [9, 1]
         sql = "INSERT INTO TopicLikes (topic_id, user_id, vote) VALUES (:topic_id, :user_id, :vote)"
     else:
         # jos result ja vote on samoja, poistetaan tykkäys
         if result[0] == 1 and vote == 1:
-            index_and_vote = [8, -1]
             vote = None
-        elif vote == 1:
-            index_and_vote = [8, 1]
         if result[0] == 0 and vote == 0:
-            index_and_vote = [9, -1]
             vote = None
-        elif vote == 0:
-            index_and_vote = [9, 1]
         sql = "UPDATE TopicLikes SET vote=:vote WHERE user_id=:user_id AND topic_id=:topic_id"
-    index_and_vote.append(vote)  # vote_index, change value, vote=None/1/0
     db.session.execute(sql, {"topic_id": topic_id, "user_id": user_id, "vote": vote})
     db.session.commit()
-    return index_and_vote # palauttaa vote_indexin ja +- arvon, jolla voidaan poistaa/lisaa vote muistissaolleessa topicciin
