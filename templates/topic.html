@@ -24,13 +24,6 @@ Luonut:
     </div>
 {% endif %}
 {{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
-<br>
-{% if topic[1] == session["user"] or session["admin"] %}
-    <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
-        <input type="hidden" name="topic_id" value="{{topic[0]}}">
-        <input type="submit" value="Poista lanka">
-    </form>
-{% endif %}
 <p>
     {% if 'user' in session %}
         <form action="/topic{{topic[0]}}" method="POST" onsubmit="return getScrollPos(this)">
@@ -64,7 +57,12 @@ Luonut:
                 style="width: 25px; transform: rotate(180deg);" />
         </form>
     {% endif %}
-    <br>
+    {% if topic[1] == session["user"] or session["admin"] %}
+    <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
+        <input type="hidden" name="topic_id" value="{{topic[0]}}">
+        <input type="submit" value="Poista lanka">
+    </form>
+    {% endif %}
     <!-- [[0:id, 1:topic_id, 2:username, 3:content, 4:(pic_name,pic_data), 5:time, 6:upvotes, 7:downvotes, 8:vote, 9:profile_pic_data]] -->
     <b>Viestit:</b> <br>
     <p>
@@ -86,13 +84,6 @@ Luonut:
                 {% endif %}
                 <br><br>
                 lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
-                {% if message[2] == session["user"] or session["admin"]%}
-                    <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
-                        <input type="hidden" name="remove_message_id" value="{{message[0]}}">
-                        <input type="hidden" name="topic_id" value="{{message[1]}}">
-                        <input type="submit" value="Poista viesti">
-                    </form>
-                {% endif %}
                 {% if 'user' in session %}
                     <form action="/topic{{topic[0]}}"+ method="POST" onsubmit="return getScrollPos(this)">
                         <input type="hidden" name="message_index" value="{{i}}">
@@ -122,6 +113,13 @@ Luonut:
                         {{message[7]}}
                         <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
                             style="width: 25px; transform: rotate(180deg);" />
+                    </form>
+                {% endif %}
+                {% if message[2] == session["user"] or session["admin"]%}
+                    <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
+                        <input type="hidden" name="remove_message_id" value="{{message[0]}}">
+                        <input type="hidden" name="topic_id" value="{{message[1]}}">
+                        <input type="submit" value="Poista viesti">
                     </form>
                 {% endif %}
                 <hr>
