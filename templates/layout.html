@@ -37,9 +37,11 @@
             </div>
         {% endif %}
     </div>
+    {% if 'user' in session %}
     <p style="color: white; margin-top: -5px; font-size: 14px;">
         Olet kirjautunut käyttäjällä {{session["user"]}}
     </p>
+    {% endif %}
 </div>
 <hr>
 {% block content %}{% endblock %}
