@@ -29,8 +29,8 @@ def savePicture(file, permission_id):
     print("orginal size:", len(data))
     data = compress(data)
     print("compress size:", len(data))
-    if len(data) > 100 * 1024:
-        return (False, "Kuvan lataus epäonnistui :(", "Tiedosto liian suuri, maximi koko 100 MB")
+    # if len(data) > 100 * 1024:
+    #     return (False, "Kuvan lataus epäonnistui :(", "Tiedosto liian suuri, maximi koko 100 MB")
 
     try:
         sql = "INSERT INTO Pictures (name, data, permission, visible) VALUES (:name, :data, :permission, :visible) RETURNING id"
