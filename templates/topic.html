@@ -1,7 +1,6 @@
 {% extends "layout.html" %}
-{% block title %}Etusivu{% endblock %}
+{% block title %}{{topic[2]}}{% endblock %}
 {% block content %}
-
 <!-- 0:topic_id, 1:username, 2:topic, 3:info, 4:time, 5:(pic_name, pic_data), 6:visits, 7:theme, 8: upvotes, 9: downvotes, 10: vote, 11:profile_pic_data-->
 {% if 'scrollPos' in session %}
 <input type="hidden" id="getPos" value="{{session['scrollPos']}}">
@@ -27,6 +26,7 @@ Luonut:
 <p>
     {% if 'user' in session %}
         <form action="/topic{{topic[0]}}" method="POST" onsubmit="return getScrollPos(this)">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
             <input type="hidden" name="topic_index" value="{{i}}">
             <input type="hidden" name="topic_id" value="{{topic[0]}}">
             <input type="hidden" id="scrollPos" name="scrollPos" value="">
@@ -48,6 +48,7 @@ Luonut:
         </form>
     {% else %}
         <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
             <input type="hidden" name="topic_id" value="{{topic[0]}}">
             <input type="hidden" id="scrollPos" name="scrollPos" value="">
             {{topic[8]}}
@@ -59,6 +60,7 @@ Luonut:
     {% endif %}
     {% if topic[1] == session["user"] or session["admin"] %}
     <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
+        <input type="hidden" name="csrf" value="{{session['csrf']}}">
         <input type="hidden" name="topic_id" value="{{topic[0]}}">
         <input type="submit" value="Poista lanka">
     </form>
@@ -86,6 +88,7 @@ Luonut:
                 lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
                 {% if 'user' in session %}
                     <form action="/topic{{topic[0]}}"+ method="POST" onsubmit="return getScrollPos(this)">
+                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
                         <input type="hidden" name="message_index" value="{{i}}">
                         <input type="hidden" name="message_id" value="{{message[0]}}">
                         <input type="hidden" id="scrollPos" name="scrollPos" value="">
@@ -106,6 +109,7 @@ Luonut:
                     </form>
                 {% else %}
                     <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
                         <input type="hidden" name="message_id" value="{{message[0]}}">
                         <input type="hidden" id="scrollPos" name="scrollPos" value="">
                         {{message[6]}}
@@ -117,6 +121,7 @@ Luonut:
                 {% endif %}
                 {% if message[2] == session["user"] or session["admin"]%}
                     <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
+                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
                         <input type="hidden" name="remove_message_id" value="{{message[0]}}">
                         <input type="hidden" name="topic_id" value="{{message[1]}}">
                         <input type="submit" value="Poista viesti">
@@ -129,6 +134,7 @@ Luonut:
     <p>
         {% if "user" in session %}
         <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
             Kirjoita viesti:<br>
             <textarea name="message" rows="5" cols="60" maxlength="500"></textarea>
             <div id="onJS" style="display: none"><span id="text_length">0</span>/500 merkkiä</div>

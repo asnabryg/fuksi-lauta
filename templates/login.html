@@ -4,6 +4,7 @@
 
 <h2>Kirjaudu</h2>
 <form action="/login" method="POST">
+    <input type="hidden" name="csrf" value="{{session['csrf']}}">
     <p>
         Käyttäjätunnus<br>
         <input type="text" name="username">

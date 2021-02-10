@@ -4,6 +4,7 @@
 
 
 <form action="/newTopic" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
+        <input type="hidden" name="csrf" value="{{session['csrf']}}">
         <b>Otsikko:</b><br>
         <input type="text" name="topic" value="{{topic}}" maxlength="60" size="60"><br>
         Viesti:<br>

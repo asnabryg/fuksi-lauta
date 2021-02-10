@@ -54,10 +54,15 @@ def getLimitedAmountOfTopics(mista=0, mihin=10, order="", theme="Kaikki", search
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
         if results == []:
             order = "uusin ensin"
+    
+    if order == "eniten tykkäyksiä":
+        sql = "SELECT T.*, SUM(CASE WHEN TL.vote=1 THEN 1 ELSE 0 END), SUM(CASE WHEN TL.vote=0 THEN 1 ELSE 0 END) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id WHERE T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY COUNT(*) FILTER (WHERE TL.vote=1) DESC LIMIT :mihin OFFSET :mista"
+        results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
 
     if order == "vanhin ensin":
         sql = "SELECT T.*, sum(case when TL.vote=1 then 1 else 0 end), sum(case when TL.vote=0 then 1 else 0 end) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id WHERE T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista": mista, "theme": theme, "search": search}).fetchall()
+
     if order == "uusin ensin":
         sql = "SELECT T.*, sum(case when TL.vote=1 then 1 else 0 end), sum(case when TL.vote=0 then 1 else 0 end) FROM Topics T LEFT JOIN TopicLikes TL ON T.id=TL.topic_id WHERE T.theme=(CASE WHEN :theme IS NOT NULL THEN :theme ELSE T.theme END) AND (LOWER(T.topic) SIMILAR TO :search OR LOWER(T.info) SIMILAR TO :search) GROUP BY T.id ORDER BY T.id desc LIMIT :mihin OFFSET :mista"
         results = db.session.execute(sql, {"mihin": mihin, "mista":mista, "theme":theme, "search": search}).fetchall()

@@ -1,8 +1,9 @@
+import os
 from posix import ST_NOEXEC
 from re import search
 from typing import Pattern
 from flask import Flask, app
-from flask import redirect, render_template, request
+from flask import redirect, render_template, request, abort
 from flask.globals import session
 from flask.helpers import url_for
 from sqlalchemy.orm.session import sessionmaker
@@ -64,6 +65,7 @@ def index():
                                page_count=session["page_count"],
                                current=session["current_page"])
     else:
+        check_CSRF(request.form["csrf"])
         if "scrollPos" in request.form:
             scrollPos = request.form["scrollPos"]
             session["scrollPos"] = scrollPos
@@ -133,6 +135,7 @@ def login():
             session["last_page"] = "/"
         return render_template("login.html", loginFail=False)
     else:
+        check_CSRF(request.form["csrf"])
         if "scrollPos" in request.form:
             session["scrollPos"] = request.form["scrollPos"]
             session["lastPage"] = "/"
@@ -175,6 +178,7 @@ def register():
             session["last_page"] = "/register"
         return render_template("register.html", reg_succeed=False)
     else:
+        check_CSRF(request.form["csrf"])
         username = request.form["username"]
         password1 = request.form["password1"]
         password2 = request.form["password2"]
@@ -210,6 +214,7 @@ def profile(username):
         session["last_page"] = "/profile/" + username
         return render_template("profile.html", passUpdated=False, pic_data=database.getProfilePictureData(session["user"]), profile_pics=database.getProfilePicDict(session["user_id"]))
     else:
+        check_CSRF(request.form["csrf"])
         #Jos vaihtaa salasanan
         password1 = request.form["password1"]
         password2 = request.form["password2"]
@@ -239,6 +244,7 @@ def profile(username):
 
 @app.route("/savePicture", methods=["POST"])
 def getProfilePicture():
+    check_CSRF(request.form["csrf"])
     file = request.files["file"]
     permission_id = int(request.form["permission_id"])
     saved = database.savePicture(file, permission_id)
@@ -257,6 +263,7 @@ def getProfilePicture():
 
 @app.route("/changeProfilePic", methods=["POST"])
 def changeProfilePic():
+    check_CSRF(request.form["csrf"])
     pic_id = request.form["profile_pic"]
     sql = "UPDATE Users SET pic_id=:pic_id WHERE username=:username"
     db.session.execute(sql, {"pic_id": pic_id, "username": session["user"]})
@@ -283,6 +290,7 @@ def topic(id):
     # Nyt topic on
     # [topic_id, username, topic, info, time, (pic_name, pic_data), visits, theme, upvotes, downvotes, vote, creator_profile_pic_data]
     if request.method == "POST":
+        check_CSRF(request.form["csrf"])
         if "scrollPos" in request.form:
             print("tykkäsy")
             scrollPos = request.form["scrollPos"]
@@ -332,6 +340,7 @@ def newTopic():
         session["last_page"] = "/newTopic"
         return render_template("newTopic.html", notSucceed=False, topic="", info="")
     else:
+        check_CSRF(request.form["csrf"])
         topic = request.form["topic"]
         info = request.form["info"]
         file = request.files["file"]
@@ -356,6 +365,7 @@ def newTopic():
 
 @app.route("/remove_message", methods=["POST"])
 def remove_message():
+    check_CSRF(request.form["csrf"])
     message_id = request.form["remove_message_id"]
     if m.removeMessage(message_id):
         return redirect("/topic" + str(request.form["topic_id"]))
@@ -364,6 +374,7 @@ def remove_message():
 
 @app.route("/remove_topic", methods=["POST"])
 def remove_topic():
+    check_CSRF(request.form["csrf"])
     topic_id = request.form["topic_id"]
     if t.removeTopic(topic_id):
         return redirect("/")
@@ -371,6 +382,7 @@ def remove_topic():
 
 @app.route("/topic_like", methods=["POST"])
 def topic_like():
+    check_CSRF(request.form["csrf"])
     if "scrollPos" in request.form:
         scrollPos = request.form["scrollPos"]
         session["scrollPos"] = scrollPos
@@ -382,18 +394,21 @@ def topic_like():
     t.setVoteToTopic(topic_id, session["user_id"], vote)
     return redirect("/")
 
+def check_CSRF(csrf):
+    if session["csrf"] != csrf:
+        abort(403)
 
 def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
     # Tarkistaa ip_osoitteen ja päivittää sen kävijöihin hashattuna, jos uusi kävijä
     # Tarkistaa milloin viimeksi käyty sivulla
-    # Tarkstaa kuinka monta online käyttäjää sivustolla juuri nyt
+    if "csrf" not in session:
+        session["csrf"] = os.urandom(16).hex()
     user.is_admin()
     if "scrollPos" not in session:
         session["scrollPos"] = 0
     if "search" not in session:
         session["search"] = ""
-        g_topics = None
     if "theme" not in session:
         session["theme"] = [["Kaikki", True], ["Satunnainen", False],
                             ["Autot", False], ["Harrastukset", False],
@@ -407,7 +422,7 @@ def check_info():
         session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]
     if "sort" not in session:
         session["sort"] = [["vanhin ensin", True], ["uusin ensin", False],
-                           ["eniten viestejä", False]]
+                           ["eniten viestejä", False], ["eniten tykkäyksiä", False]]
     if "limit_offset" not in session:
         session["limit_offset"] = (0, 10)
     if "current_page" not in session:

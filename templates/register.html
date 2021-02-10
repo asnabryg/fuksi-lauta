@@ -1,11 +1,12 @@
 {% extends "layout.html" %}
-{% block title %}Etusivu{% endblock %}
+{% block title %}Rekisteröidy{% endblock %}
 {% block content %}
 
 
 {% if not reg_succeed %}
     <h2>Rekisteröidy</h2>
     <form action="/register" method="POST" onsubmit="return checkPassword(this)">
+        <input type="hidden" name="csrf" value="{{session['csrf']}}">
         <p>
             Käyttäjätunnus<br>
             <input type="text" name="username">
