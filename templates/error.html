@@ -1,19 +1,21 @@
 {% extends "layout.html" %}
 {% block title %}ERROR{% endblock %}
 {% block content %}
+<link rel="stylesheet" type="text/css" href="static/style.css">
 
-<h2>Error</h2>
-<p>
-    <h4>{{ error_type }}</h4>
+<div class="profile">
+    <h2>Error</h2>
+    <p>
+        <h4>{{ error_type }}</h4>
 
-    {% if error_message != None %}
-        {{ error_message }}
-    {% endif %}
-</p>
-<p>
-    <br>
-    Palaa <a href={{page}}>takaisin</a>
-    tai <a href="/">Etusivulle</a>
-</p>
-
+        {% if error_message != None %}
+            {{ error_message }}
+        {% endif %}
+    </p>
+    <p>
+        <br>
+        Palaa <a href={{page}}>takaisin</a>
+        tai <a href="/">Etusivulle</a>
+    </p>
+</div>
 {% endblock %}

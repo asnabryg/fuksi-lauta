@@ -1,170 +1,202 @@
 {% extends "layout.html" %}
 {% block title %}Etusivu{% endblock %}
 {% block content %}
-<title>Eeetusivu</title>
-<h1>Tervetuloa!</h1>
+<link rel="stylesheet" type="text/css" href="static/style.css">
+<!-- <link rel="stylesheet" type="text/css" href="static/style.css"> -->
 {% if 'scrollPos' in session %}
     <input type="hidden" id="getPos" value="{{session['scrollPos']}}">
 {% endif %}
 <p> 
-    {% if "user" in session %}
-    <a href="/newTopic" onscroll="getScrollPos()">Uusi aihe</a>
-    {% endif %}
-    <hr>
-    <form action="/" method="POST">
-        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-        Haku:<br>
-        <input type="text" name="search" placeholder="Etsi sanoilla" value="{{session['search']}}"><br><br>
-        Aihealue:<br>
-        <select name="theme">
-            {% for i in range(session['theme']|length) %}
-                {% if session['theme'][i][1] %}
-                    <option value="{{session['theme'][i][0]}}" selected>{{session['theme'][i][0]}}</option>
-                {% else %}
-                    <option value="{{session['theme'][i][0]}}">{{session['theme'][i][0]}}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
-        <br>
-        Järjestä:<br>
-        <select name="sort">
-            {% for i in range(session['sort']|length) %}
-                {% if session['sort'][i][1] %}
-                    <option value="{{session['sort'][i][0]}}" selected>{{session['sort'][i][0]}}</option>
-                {% else %}
-                    <option value="{{session['sort'][i][0]}}">{{session['sort'][i][0]}}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
-        <br>
-        Aiheita per sivu:<br>
-        <select name="topics_per_page">
-            {% for i in range(session['topics_per_page']|length) %}
-                {% if session['topics_per_page'][i][1] %}
-                    <option value="{{session['topics_per_page'][i][0]}}" selected>{{session['topics_per_page'][i][0]}}</option>
-                {% else %}
-                    <option value="{{session['topics_per_page'][i][0]}}">{{session['topics_per_page'][i][0]}}</option>
-                {% endif %}
-            {% endfor %}
-        </select>
-        <br>
-        <input type="submit" value="päivitä">
-    </form>
-    
-    {% for i in range(topics|length) %}
-    <hr>
-    <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: upvotes, 9: downvotes, 10:message_count, 11: vote-->
-        <a href="/topic{{topics[i][0]}}"><b>{{topics[i][1]}}</b></a> <br><br>
-        {% if 200 > topics[i][2]|length %} <!-- esikatselu on 200 merkkiä pitkä -->
-            {{topics[i][2]}} <br>
-        {% else %}
-            {{topics[i][2][:200] + "..."}}
-        {% endif %}
-
-        {% if topics[i][5] != None %}
-            <div style="width: 128px; height: 128px;">
-                <img src="data:image/jpeg;base64,{{topics[i][6]}}" alt="{{topics[i][5]}}" style="width: inherit">
-            </div>
-        {% endif %}
-        <br>
-        luonut:
-        {% if topics[i][7] != None %}
-        <div style="width: 15px; height: 15px; display: inline;">
-            <img src="data:image/jpeg;base64,{{topics[i][7]}}" alt="Profiilikuva" style="width: inherit">
+    <div class="welcome_search_div">
+        <div class="welcome_div">
+            <h1>Tervetuloa!</h1>
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna
+            aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis
+            aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
+            occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
         </div>
-        {% endif %}
-        {{topics[i][3]}}, {{topics[i][4].strftime("%Y-%m-%d %H:%M")}} <br>
-        Viestejä: {{topics[i][10]}} kpl<br>
-        {% if 'user' in session %}
-            <form action="/" method="POST" onsubmit="return getScrollPos(this)">
+        <hr>
+        <div class="search_div">
+            <form action="/" method="POST">
                 <input type="hidden" name="csrf" value="{{session['csrf']}}">
-                <input type="hidden" name="topic_index" value="{{i}}">
-                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
-                <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                <input type="hidden" name="topics" value="{{topics}}">
-                {{topics[i][8]}}
-                {% if topics[i][11] == None or topics[i][11] == 0%}
-                    <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                {% elif topics[i][11] == 1 %}
-                    <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
-                {% endif %}
-                {{topics[i][9]}}
-                {% if topics[i][11] == None or topics[i][11] == 1%}
-                    <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                        style="width: 25px; transform: rotate(180deg);" />
-                {% elif topics[i][11] == 0 %}
-                    <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
-                        style="width: 25px; transform: rotate(180deg);" />
-                {% endif %}
+                Haku:<br>
+                <input type="text" name="search" placeholder="Etsi sanoilla" value="{{session['search']}}"><br><br>
+                Aihealue:<br>
+                <select name="theme">
+                    {% for i in range(session['theme']|length) %}
+                        {% if session['theme'][i][1] %}
+                            <option value="{{session['theme'][i][0]}}" selected>{{session['theme'][i][0]}}</option>
+                        {% else %}
+                            <option value="{{session['theme'][i][0]}}">{{session['theme'][i][0]}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+                Järjestä:<br>
+                <select name="sort">
+                    {% for i in range(session['sort']|length) %}
+                        {% if session['sort'][i][1] %}
+                            <option value="{{session['sort'][i][0]}}" selected>{{session['sort'][i][0]}}</option>
+                        {% else %}
+                            <option value="{{session['sort'][i][0]}}">{{session['sort'][i][0]}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <br>
+                Aiheita per sivu:<br>
+                <select name="topics_per_page">
+                    {% for i in range(session['topics_per_page']|length) %}
+                        {% if session['topics_per_page'][i][1] %}
+                            <option value="{{session['topics_per_page'][i][0]}}" selected>{{session['topics_per_page'][i][0]}}</option>
+                        {% else %}
+                            <option value="{{session['topics_per_page'][i][0]}}">{{session['topics_per_page'][i][0]}}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <p>
+                    <input class="refresh_btn" type="submit" value="päivitä">
+                </p>
             </form>
-        {% else %}
-            <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
-                <input type="hidden" name="csrf" value="{{session['csrf']}}">
-                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
-                <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                {{topics[i][8]}}
-                <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                {{topics[i][9]}}
-                <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                    style="width: 25px; transform: rotate(180deg);" />
+        </div>
+    </div>
+    <hr style="max-width: 60em; margin: 0 auto;">
+    {% if "user" in session %}
+    <br>
+        <div class="top_btns_div">
+            <form action="/newTopic">
+                <input class="new_topic_btn" type="submit" value="Luo uusi keskustelu">
             </form>
-        {% endif %}
+        </div>
+    {% endif %}
+    {% for i in range(topics|length) %}
+        <div class="topic_div">
+        <!-- 0: topic_id, 1: otsikko, 2: info, 3: luoja 4: aika 5: pic_name, 6: pic_data, 7:profile_pic_data, 8: upvotes, 9: downvotes, 10:message_count, 11: vote-->
+            <a class="topic" href="/topic{{topics[i][0]}}"><b>{{topics[i][1]}}</b></a> <br><br>
+            <div class="content_div">
+                    {% if topics[i][5] != None %}
+                        <div class="content_pic_div">
+                            <div style="width: 128px; height: 128px;">
+                                <img src="data:image/jpeg;base64,{{topics[i][6]}}" alt="{{topics[i][5]}}" style="width: inherit">
+                            </div>
+                        </div>
+                    {% endif %}
+                <div class="content_premessage_div">
+                    {% if 300 > topics[i][2]|length %}
+                        <!-- esikatselu on 300 merkkiä pitkä -->
+                        {{topics[i][2]}} <br>
+                    {% else %}
+                        {{topics[i][2][:300] + "..."}}
+                    {% endif %}
+                </div>
+                <div class="topic_infos_div">
+                    Luonut:<br>
+                    {% if topics[i][7] != None %}
+                    <div style="width: 30px; height: 30px; display: inline;">
+                        <img src="data:image/jpeg;base64,{{topics[i][7]}}" alt="Profiilikuva" style="max-width: 30px; max-height: 30px;">
+                    </div>
+                    {% endif %}
+                    {{topics[i][3]}}<br>
+                    {{topics[i][4].strftime("%Y-%m-%d %H:%M")}}
+                    <p>
+                        Viestejä: {{topics[i][10]}} kpl
+                    </p>
+                    <p>
+                        {% if 'user' in session %}
+                            <form action="/" method="POST" onsubmit="return getScrollPos(this)">
+                                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                                <input type="hidden" name="topic_index" value="{{i}}">
+                                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
+                                <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                                <input type="hidden" name="topics" value="{{topics}}">
+                                {{topics[i][8]}}
+                                {% if topics[i][11] == None or topics[i][11] == 0%}
+                                    <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                                {% elif topics[i][11] == 1 %}
+                                    <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
+                                {% endif %}
+                                {{topics[i][9]}}
+                                {% if topics[i][11] == None or topics[i][11] == 1%}
+                                    <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                                        style="width: 25px; transform: rotate(180deg);" />
+                                {% elif topics[i][11] == 0 %}
+                                    <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
+                                        style="width: 25px; transform: rotate(180deg);" />
+                                {% endif %}
+                            </form>
+                        {% else %}
+                            <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+                                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                                <input type="hidden" name="topic_id" value="{{topics[i][0]}}">
+                                <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                                {{topics[i][8]}}
+                                <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                                {{topics[i][9]}}
+                                <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                                    style="width: 25px; transform: rotate(180deg);" />
+                            </form>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
     {% endfor %}
 </p>
 {% if page_count > 1%}
-<div>
-    sivut:
+<div class="top_btns_div">
+    Sivut:
+</div>
+<div class="top_btns_div">
     <form action="/" method="POST">
         <input type="hidden" name="csrf" value="{{session['csrf']}}">
         {% if page_count > 5 %}
             {% if current > 1 %}
-                <input type="submit" name="page" value="edellinen">
+                <input class="page_btn" type="submit" name="page" value="edellinen">
             {% endif %}
             {% if 3 >= current %}
                 {% for i in range(1, 6) %}
                     {% if i == current %}
-                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                        <input class="page_btn_activated" type="submit" name="page" value="{{i}}">
                     {% else %}
-                        <input type="submit" name="page" value="{{i}}">
+                        <input class="page_btn" type="submit" name="page" value="{{i}}">
                     {% endif %}
                 {% endfor %}
             {% endif %}
             {% if current > 3 %}
-                <input type="submit" name="page" value="1"> ...
+                <input class="page_btn" type="submit" name="page" value="1"> ...
             {% endif %}
             {% if current >= page_count-2 %}
                 {% for i in range(page_count-4, page_count+1) %}
                     {% if i == current %}
-                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                        <input class="page_btn_activated" type="submit" name="page" value="{{i}}">
                     {% else %}
-                        <input type="submit" name="page" value="{{i}}">
+                        <input class="page_btn" type="submit" name="page" value="{{i}}">
                     {% endif %}
                 {% endfor %}
             {% elif current > 3 %}
                 {% for i in range(current-2, current+3) %}
                     {% if i == current %}
-                        <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                        <input class="page_btn_activated" type="submit" name="page" value="{{i}}">
                     {% else %}
-                        <input type="submit" name="page" value="{{i}}">
+                        <input class="page_btn" type="submit" name="page" value="{{i}}">
                     {% endif %}
                 {% endfor %}
             {% endif %}
             {% if page_count-3 >= current %}
-                ... <input type="submit" name="page" value="{{page_count}}">
+                ... <input class="page_btn" type="submit" name="page" value="{{page_count}}">
             {% endif %}
         {% else %}
             {% if current > 1 %}
-                <input type="submit" name="page" value="edellinen">
+                <input class="page_btn" type="submit" name="page" value="edellinen">
             {% endif %}
             {% for i in range(1, page_count+1) %}
                 {% if i == current %}
-                    <input type="submit" name="page" value="{{i}}" style="background-color: lightskyblue;">
+                    <input class="page_btn_activated" type="submit" name="page" value="{{i}}">
                 {% else %}
-                    <input type="submit" name="page" value="{{i}}">
+                    <input class="page_btn" type="submit" name="page" value="{{i}}">
                 {% endif %}
             {% endfor %}
             {% if page_count > current %}
-                <input type="submit" name="page" value="seuraava">
+                <input class="page_btn" type="submit" name="page" value="seuraava">
             {% endif %}
         {% endif %}
     </form>

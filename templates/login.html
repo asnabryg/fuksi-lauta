@@ -1,27 +1,29 @@
 {% extends "layout.html" %}
-{% block title %}Etusivu{% endblock %}
+{% block title %}Kirjaudu{% endblock %}
 {% block content %}
+<link rel="stylesheet" type="text/css" href="static/style.css">
 
-<h2>Kirjaudu</h2>
-<form action="/login" method="POST">
-    <input type="hidden" name="csrf" value="{{session['csrf']}}">
+<div class="profile">
+    <h2>Kirjaudu</h2>
+    <form action="/login" method="POST">
+        <input type="hidden" name="csrf" value="{{session['csrf']}}">
+        <p>
+            Käyttäjätunnus<br>
+            <input type="text" name="username">
+        </p>
+        <p>
+            Salasana:<br>
+            <input type="password" name="password">
+        </p>
+        {% if loginFail %}
+            <span style="color:red">Väärä käyttäjätunnus tai salasana.</span>
+            <br>
+        {% endif %}
+        <input type="submit" value="Kirjaudu">
+    </form>
     <p>
-        Käyttäjätunnus<br>
-        <input type="text" name="username">
-    </p>
-    <p>
-        Salasana:<br>
-        <input type="password" name="password">
-    </p>
-    {% if loginFail %}
-        <span style="color:red">Väärä käyttäjätunnus tai salasana.</span>
-        <br>
-    {% endif %}
-    <input type="submit" value="Kirjaudu">
-</form>
-<p>
-    Rekistöröidy
-    <a href="/register">tästä</a>
-    uudeksi käyttäjäksi.
-
+        Rekistöröidy
+        <a href="/register">tästä</a>
+        uudeksi käyttäjäksi.
+</div>
     {% endblock %}

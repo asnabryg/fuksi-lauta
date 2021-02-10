@@ -292,7 +292,6 @@ def topic(id):
     if request.method == "POST":
         check_CSRF(request.form["csrf"])
         if "scrollPos" in request.form:
-            print("tykkäsy")
             scrollPos = request.form["scrollPos"]
             session["scrollPos"] = scrollPos
             if "topic_id" in request.form:

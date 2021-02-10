@@ -1,24 +1,55 @@
 <title>Fuksi-lauta - {% block title %}{% endblock %}</title>
-<h1>Fuksi-lauta</h1>
-<a href="/">Etusivu</a>
-{% if "user" not in session %}
-    <a href="/login">Kirjaudu</a>
-    <a href="/register">Rekisteröidy</a>
-{% else %}
-    <a href="/profile/{{session['user']}}">Profiili</a>
-    <a href="/logout">Kirjaudu ulos</a>
-    <br>
-    <p>
+<link rel="stylesheet" type="text/css" href="static/style.css">
+<div class="top">
+    <h1 style="color: white;">FUKSI-LAUTA</h1>
+    <div class="top_btns_div">
+        <div class="top_btn_div">
+            <form action="/">
+                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                <input class="top_btn" type="submit" value="Etusivu">
+            </form>
+        </div>
+        {% if "user" not in session %}
+            <div class="top_btn_div">
+                <form action="/login">
+                    <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                    <input class="top_btn" type="submit" value="Kirjaudu">
+                </form>
+            </div>
+            <div class="top_btn_div">
+                <form action="/register">
+                    <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                    <input class="top_btn" type="submit" value="Rekisteröidy">
+                </form>
+            </div>
+        {% else %}
+            <div class="top_btn_div">
+                <form action="/profile/{{session['user']}}">
+                    <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                    <input class="top_btn" type="submit" value="Profiili">
+                </form>
+            </div>
+            <div class="top_btn_div">
+                <form action="/logout">
+                    <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                    <input class="top_btn" type="submit" value="Kirjaudu ulos">
+                </form>
+            </div>
+        {% endif %}
+    </div>
+    <p style="color: white; margin-top: -5px; font-size: 14px;">
         Olet kirjautunut käyttäjällä {{session["user"]}}
     </p>
-{% endif %}
+</div>
 <hr>
 {% block content %}{% endblock %}
-<hr>
-{% if session["visit_info"][1] != None %}
-Kävit viimeksi sivustolla {{session["visit_info"][1].strftime("%Y-%m-%d %H:%M:%S")}}
-{% endif %}
-<br>
-<br>
-Sivustolla käyneitä: {{session["visit_info"][0]}} <br>
-Sivustolla kirjautuneita käyttäjiä: {{session["user_count"]}}
+<div class="bottom">
+    <hr>
+    {% if session["visit_info"][1] != None %}
+    Kävit viimeksi sivustolla {{session["visit_info"][1].strftime("%Y-%m-%d %H:%M:%S")}}
+    {% endif %}
+    <br>
+    <br>
+    Sivustolla käyneitä: {{session["visit_info"][0]}} <br>
+    Sivustolla kirjautuneita käyttäjiä: {{session["user_count"]}}
+</div>

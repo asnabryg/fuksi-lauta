@@ -1,37 +1,39 @@
 {% extends "layout.html" %}
 {% block title %}Rekisteröidy{% endblock %}
 {% block content %}
+<link rel="stylesheet" type="text/css" href="static/style.css">
 
-
-{% if not reg_succeed %}
-    <h2>Rekisteröidy</h2>
-    <form action="/register" method="POST" onsubmit="return checkPassword(this)">
-        <input type="hidden" name="csrf" value="{{session['csrf']}}">
+<div class="profile">
+    {% if not reg_succeed %}
+        <h2>Rekisteröidy</h2>
+        <form action="/register" method="POST" onsubmit="return checkPassword(this)">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+            <p>
+                Käyttäjätunnus<br>
+                <input type="text" name="username">
+            </p>
+            <p>
+                Salasana:<br>
+                <input type="password" name="password1">
+                Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
+            </p>
+            <p>
+                Salasana uudelleen:<br>
+                <input type="password" name="password2">
+            </p>
+            <input type="submit" value="Rekisteröidy">
+        </form>
         <p>
-            Käyttäjätunnus<br>
-            <input type="text" name="username">
-        </p>
+            Jos sinulla on jo käyttäjä, kirjaudu sisään
+            <a href="/login">tästä</a>.
+    {% else %}
+        <h3>Rekistöröinti onnistui.</h3>
         <p>
-            Salasana:<br>
-            <input type="password" name="password1">
-            Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
+            Kirjaudu 
+            <a href="/login"> tästä</a> sisään.
         </p>
-        <p>
-            Salasana uudelleen:<br>
-            <input type="password" name="password2">
-        </p>
-        <input type="submit" value="Rekisteröidy">
-    </form>
-    <p>
-        Jos sinulla on jo käyttäjä, kirjaudu sisään
-        <a href="/login">tästä</a>.
-{% else %}
-    <h3>Rekistöröinti onnistui.</h3>
-    <p>
-        Kirjaudu 
-        <a href="/login"> tästä</a> sisään.
-    </p>
-{% endif %}
+    {% endif %}
+</div>
 <script>
     function checkPassword(form) {
         if (form.password1.value != form.password2.value) {

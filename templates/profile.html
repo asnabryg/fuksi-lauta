@@ -1,78 +1,81 @@
 {% extends "layout.html" %}
 {% block title %}Profiili{% endblock %}
 {% block content %}
-<h2>Profiili</h2>
-<p>
-    Käyttäjätunnus: {{session["user"]}}
-</p>
-<p>
-    {% if pic_data != None %}
+<link rel="stylesheet" type="text/css" href="../static/style.css">
+<div class="profile">
+    <h2>Profiili</h2>
     <p>
-        <div style="width: 250px; height: 250px;">
-            <img src="data:image/jpeg;base64,{{pic_data}}" alt="Profiilikuva" style="width: inherit">
-        </div>
+        Käyttäjätunnus: {{session["user"]}}
     </p>
-    {% endif %}
-    {% if profile_pics[0]|length != 0 %}
-    <form action="/changeProfilePic" method="POST">
-        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-        <select name="profile_pic">
-            <option value="{{profile_pics[0][0]}}" selected>{{profile_pics[0][1]}}</option>
-            {% for pic in profile_pics[1:] %}
-                <!-- ID: pic[0], NAME: pic[1] -->
-                <option value="{{pic[0]}}">{{pic[1]}}</option>
-            {% endfor %}
-        </select>
-        <input type="submit" value="Vaihda">
-    </form>
-    {% endif %}
-    <form action="/savePicture" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-        <b>Lisää uusi profiilikuva:</b> <br>
-        Tiedosto: <input type="file" name="file"> <br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
-        <input type="hidden" name="permission_id" value="{{session['user_id']}}"> <br>
-        <input type="submit" value="Lähetä">
-    </form>
-</p>
-{% if "admin" in session %}
-    {% if session["admin"] %}
-    <hr>
     <p>
-        <h3>Lisää oletusprofiilikuvia tietokantaan:</h3> <br>
+        {% if pic_data != None %}
+        <p>
+            <div style="width: 250px; height: 250px;">
+                <img src="data:image/jpeg;base64,{{pic_data}}" alt="Profiilikuva" style="width: inherit">
+            </div>
+        </p>
+        {% endif %}
+        {% if profile_pics[0]|length != 0 %}
+        <form action="/changeProfilePic" method="POST">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+            <select name="profile_pic">
+                <option value="{{profile_pics[0][0]}}" selected>{{profile_pics[0][1]}}</option>
+                {% for pic in profile_pics[1:] %}
+                    <!-- ID: pic[0], NAME: pic[1] -->
+                    <option value="{{pic[0]}}">{{pic[1]}}</option>
+                {% endfor %}
+            </select>
+            <input type="submit" value="Vaihda">
+        </form>
+        {% endif %}
         <form action="/savePicture" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf" value="{{session['csrf']}}">
-            Tiedosto: <input type="file" name="file">
-            <p>
-                <input type="hidden" name="permission_id" value="0">
-                <input type="submit" value="Lähetä">
+            <b>Lisää uusi profiilikuva:</b> <br>
+            Tiedosto: <input type="file" name="file"> <br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
+            <input type="hidden" name="permission_id" value="{{session['user_id']}}"> <br>
+            <input type="submit" value="Lähetä">
         </form>
     </p>
-    <hr>
-    {% endif %}
-{% endif %}
-
-<form action="/profile/{{session['user']}}" method="POST" onsubmit="return checkPassword(this)">
-    <input type="hidden" name="csrf" value="{{session['csrf']}}">
-    <p>
-        <h3>Vaihda salasana:</h3>
-        Uusi salasana:<br>
-        <input type="password" name="password1">
-        Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
-    </p>
-    <p>
-        Salasana uudelleen:<br>
-        <input type="password" name="password2">
-    </p>
-    <p>
-        Vanha salasana:<br>
-        <input type="password" name="old_password">
-    <p>
-        <input type="submit" value="Vaihda">
-        <br>
-        {% if passUpdated %}
-        <span style="color:green">Salasanan vaihto onnistui!</span>
+    {% if "admin" in session %}
+        {% if session["admin"] %}
+        <hr>
+        <p>
+            <h3>Lisää oletusprofiilikuvia tietokantaan:</h3> <br>
+            <form action="/savePicture" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                Tiedosto: <input type="file" name="file">
+                <p>
+                    <input type="hidden" name="permission_id" value="0">
+                    <input type="submit" value="Lähetä">
+            </form>
+        </p>
+        <hr>
         {% endif %}
-</form>
+    {% endif %}
+
+    <form action="/profile/{{session['user']}}" method="POST" onsubmit="return checkPassword(this)">
+        <input type="hidden" name="csrf" value="{{session['csrf']}}">
+        <p>
+            <h3>Vaihda salasana:</h3>
+            Uusi salasana:<br>
+            <input type="password" name="password1">
+            Salasanan pitää olla vähintään 8 merkkiä pitkä ja sisältää numeroita.
+        </p>
+        <p>
+            Salasana uudelleen:<br>
+            <input type="password" name="password2">
+        </p>
+        <p>
+            Vanha salasana:<br>
+            <input type="password" name="old_password">
+        <p>
+            <input type="submit" value="Vaihda">
+            <br>
+            {% if passUpdated %}
+            <span style="color:green">Salasanan vaihto onnistui!</span>
+            {% endif %}
+    </form>
+</div>
 <script>
     function checkPassword(form) {
         if (form.password1.value != form.password2.value) {

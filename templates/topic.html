@@ -1,161 +1,164 @@
 {% extends "layout.html" %}
 {% block title %}{{topic[2]}}{% endblock %}
 {% block content %}
+<link rel="stylesheet" type="text/css" href="static/style.css">
 <!-- 0:topic_id, 1:username, 2:topic, 3:info, 4:time, 5:(pic_name, pic_data), 6:visits, 7:theme, 8: upvotes, 9: downvotes, 10: vote, 11:profile_pic_data-->
-{% if 'scrollPos' in session %}
-<input type="hidden" id="getPos" value="{{session['scrollPos']}}">
-{% endif %}
-<h2>{{topic[2]}}</h2>
-{% if topic[5] != None %}
+<div class="profile">
+    {% if 'scrollPos' in session %}
+    <input type="hidden" id="getPos" value="{{session['scrollPos']}}">
+    {% endif %}
+    <h2>{{topic[2]}}</h2>
+    {% if topic[5] != None %}
+        <p>
+            <div style="width: 500px; height: 500px;">
+                <img src="data:image/jpeg;base64,{{topic[5][1]}}" alt="{{topic[5][0]}}" style="width: inherit">
+            </div>
+        </p>
+    {% endif %}
     <p>
-        <div style="width: 500px; height: 500px;">
-            <img src="data:image/jpeg;base64,{{topic[5][1]}}" alt="{{topic[5][0]}}" style="width: inherit">
+        {{topic[3]}}
+    </p>
+    Luonut:
+    {% if topic[11] != None %}
+        <div style="width: 15px; height: 15px; display: inline;">
+            <img src="data:image/jpeg;base64,{{topic[11]}}" alt="Profiilikuva" style="width: inherit">
         </div>
-    </p>
-{% endif %}
-<p>
-    {{topic[3]}}
-</p>
-Luonut:
-{% if topic[11] != None %}
-    <div style="width: 15px; height: 15px; display: inline;">
-        <img src="data:image/jpeg;base64,{{topic[11]}}" alt="Profiilikuva" style="width: inherit">
-    </div>
-{% endif %}
-{{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
-<p>
-    {% if 'user' in session %}
-        <form action="/topic{{topic[0]}}" method="POST" onsubmit="return getScrollPos(this)">
-            <input type="hidden" name="csrf" value="{{session['csrf']}}">
-            <input type="hidden" name="topic_index" value="{{i}}">
-            <input type="hidden" name="topic_id" value="{{topic[0]}}">
-            <input type="hidden" id="scrollPos" name="scrollPos" value="">
-            <!-- <input type="hidden" name="topics" value="{{topics}}"> -->
-            {{topic[8]}}
-            {% if topic[10] == None or topic[10] == 0%}
-            <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-            {% elif topic[10] == 1 %}
-            <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
-            {% endif %}
-            {{topic[9]}}
-            {% if topic[10] == None or topic[10] == 1%}
-            <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                style="width: 25px; transform: rotate(180deg);" />
-            {% elif topic[10] == 0 %}
-            <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
-                style="width: 25px; transform: rotate(180deg);" />
-            {% endif %}
-        </form>
-    {% else %}
-        <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
-            <input type="hidden" name="csrf" value="{{session['csrf']}}">
-            <input type="hidden" name="topic_id" value="{{topic[0]}}">
-            <input type="hidden" id="scrollPos" name="scrollPos" value="">
-            {{topic[8]}}
-            <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-            {{topic[9]}}
-            <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                style="width: 25px; transform: rotate(180deg);" />
-        </form>
     {% endif %}
-    {% if topic[1] == session["user"] or session["admin"] %}
-    <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
-        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-        <input type="hidden" name="topic_id" value="{{topic[0]}}">
-        <input type="submit" value="Poista lanka">
-    </form>
-    {% endif %}
-    <!-- [[0:id, 1:topic_id, 2:username, 3:content, 4:(pic_name,pic_data), 5:time, 6:upvotes, 7:downvotes, 8:vote, 9:profile_pic_data]] -->
-    <b>Viestit:</b> <br>
+    {{topic[1]}}, {{topic[4].strftime("%Y-%m-%d %H:%M:%S")}}
     <p>
-        <hr>
-        {% if messages != None %}
-            {% for message in messages %}
-                <b>{{message[2]}}:</b><br>
-                {% if message[9] != None %}
-                    <div style="width: 64px; height: 64px; display: initial;">
-                        <img src="data:image/jpeg;base64,{{message[9]}}" alt="profiilikuva" style="width: inherit">
-                    </div>
+        {% if 'user' in session %}
+            <form action="/topic{{topic[0]}}" method="POST" onsubmit="return getScrollPos(this)">
+                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                <input type="hidden" name="topic_index" value="{{i}}">
+                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+                <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                <!-- <input type="hidden" name="topics" value="{{topics}}"> -->
+                {{topic[8]}}
+                {% if topic[10] == None or topic[10] == 0%}
+                <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                {% elif topic[10] == 1 %}
+                <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
                 {% endif %}
-                <br>
-                {{message[3]}}
-                <br>{% if message[4] != None %}
-                <div style="width: 250px; height: 250px;">
-                    <img src="data:image/jpeg;base64,{{message[4][1]}}" alt="{{topic[4][0]}}" style="width: inherit">
-                </div>
+                {{topic[9]}}
+                {% if topic[10] == None or topic[10] == 1%}
+                <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                    style="width: 25px; transform: rotate(180deg);" />
+                {% elif topic[10] == 0 %}
+                <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
+                    style="width: 25px; transform: rotate(180deg);" />
                 {% endif %}
-                <br><br>
-                lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
-                {% if 'user' in session %}
-                    <form action="/topic{{topic[0]}}"+ method="POST" onsubmit="return getScrollPos(this)">
-                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-                        <input type="hidden" name="message_index" value="{{i}}">
-                        <input type="hidden" name="message_id" value="{{message[0]}}">
-                        <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                        {{message[6]}}
-                        {% if message[8] == None or message[8] == 0%}
-                        <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                        {% elif message[8] == 1 %}
-                        <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
-                        {% endif %}
-                        {{message[7]}}
-                        {% if message[8] == None or message[8] == 1%}
-                        <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                            style="width: 25px; transform: rotate(180deg);" />
-                        {% elif message[8] == 0 %}
-                        <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
-                            style="width: 25px; transform: rotate(180deg);" />
-                        {% endif %}
-                    </form>
-                {% else %}
-                    <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
-                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-                        <input type="hidden" name="message_id" value="{{message[0]}}">
-                        <input type="hidden" id="scrollPos" name="scrollPos" value="">
-                        {{message[6]}}
-                        <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
-                        {{message[7]}}
-                        <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
-                            style="width: 25px; transform: rotate(180deg);" />
-                    </form>
-                {% endif %}
-                {% if message[2] == session["user"] or session["admin"]%}
-                    <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
-                        <input type="hidden" name="csrf" value="{{session['csrf']}}">
-                        <input type="hidden" name="remove_message_id" value="{{message[0]}}">
-                        <input type="hidden" name="topic_id" value="{{message[1]}}">
-                        <input type="submit" value="Poista viesti">
-                    </form>
-                {% endif %}
-                <hr>
-            {% endfor %}
-        {% endif %}
-    </p>
-    <p>
-        {% if "user" in session %}
-        <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
-            <input type="hidden" name="csrf" value="{{session['csrf']}}">
-            Kirjoita viesti:<br>
-            <textarea name="message" rows="5" cols="60" maxlength="500"></textarea>
-            <div id="onJS" style="display: none"><span id="text_length">0</span>/500 merkkiä</div>
-            <br>Lisää kuva:<br>
-            Tiedosto: <input type="file" name="file"><br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
-            {% if notSucceed %}
-            <span style="color:red">Kuvan lataus epäonnistui.</span><br>
-            {% endif %}
-            <input type="hidden" name="permission_id" value="-2">
-            <p>
-                <input type="submit" value="Lähetä viesti">
-            </p>
-        </form>
+            </form>
         {% else %}
-        <a href="/login">Kirjaudu</a>
-        tai
-        <a href="/register">rekisteröidy</a>
-        kirjoittaaksesi viestin.
+            <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                <input type="hidden" name="topic_id" value="{{topic[0]}}">
+                <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                {{topic[8]}}
+                <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                {{topic[9]}}
+                <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                    style="width: 25px; transform: rotate(180deg);" />
+            </form>
         {% endif %}
+        {% if topic[1] == session["user"] or session["admin"] %}
+        <form action="/remove_topic" method="POST" onsubmit="return checkRemoveTopic(this)">
+            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+            <input type="hidden" name="topic_id" value="{{topic[0]}}">
+            <input type="submit" value="Poista lanka">
+        </form>
+        {% endif %}
+        <!-- [[0:id, 1:topic_id, 2:username, 3:content, 4:(pic_name,pic_data), 5:time, 6:upvotes, 7:downvotes, 8:vote, 9:profile_pic_data]] -->
+        <b>Viestit:</b> <br>
+        <p>
+            <hr>
+            {% if messages != None %}
+                {% for message in messages %}
+                    <b>{{message[2]}}:</b><br>
+                    {% if message[9] != None %}
+                        <div style="width: 64px; height: 64px; display: initial;">
+                            <img src="data:image/jpeg;base64,{{message[9]}}" alt="profiilikuva" style="width: inherit">
+                        </div>
+                    {% endif %}
+                    <br>
+                    {{message[3]}}
+                    <br>{% if message[4] != None %}
+                    <div style="width: 250px; height: 250px;">
+                        <img src="data:image/jpeg;base64,{{message[4][1]}}" alt="{{topic[4][0]}}" style="width: inherit">
+                    </div>
+                    {% endif %}
+                    <br><br>
+                    lähetetty: {{message[5].strftime("%Y-%m-%d %H:%M:%S")}}<br>
+                    {% if 'user' in session %}
+                        <form action="/topic{{topic[0]}}"+ method="POST" onsubmit="return getScrollPos(this)">
+                            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                            <input type="hidden" name="message_index" value="{{i}}">
+                            <input type="hidden" name="message_id" value="{{message[0]}}">
+                            <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                            {{message[6]}}
+                            {% if message[8] == None or message[8] == 0%}
+                            <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                            {% elif message[8] == 1 %}
+                            <input type="image" name="upvote" value="1" src="/static/images/thumb_on1.png" alt="Submit" style="width: 25px" />
+                            {% endif %}
+                            {{message[7]}}
+                            {% if message[8] == None or message[8] == 1%}
+                            <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                                style="width: 25px; transform: rotate(180deg);" />
+                            {% elif message[8] == 0 %}
+                            <input type="image" name="downvote" value="0" src="/static/images/thumb_red.png" alt="Submit"
+                                style="width: 25px; transform: rotate(180deg);" />
+                            {% endif %}
+                        </form>
+                    {% else %}
+                        <form action="/login" method="GET" onsubmit="return getScrollPos(this)">
+                            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                            <input type="hidden" name="message_id" value="{{message[0]}}">
+                            <input type="hidden" id="scrollPos" name="scrollPos" value="">
+                            {{message[6]}}
+                            <input type="image" name="upvote" value="1" src="/static/images/thumb_off1.png" alt="Submit" style="width: 25px" />
+                            {{message[7]}}
+                            <input type="image" name="downvote" value="0" src="/static/images/thumb_off1.png" alt="Submit"
+                                style="width: 25px; transform: rotate(180deg);" />
+                        </form>
+                    {% endif %}
+                    {% if message[2] == session["user"] or session["admin"]%}
+                        <form action="/remove_message" method="POST" onsubmit="return checkRemoveMessage(this)">
+                            <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                            <input type="hidden" name="remove_message_id" value="{{message[0]}}">
+                            <input type="hidden" name="topic_id" value="{{message[1]}}">
+                            <input type="submit" value="Poista viesti">
+                        </form>
+                    {% endif %}
+                    <hr>
+                {% endfor %}
+            {% endif %}
+        </p>
+        <p>
+            {% if "user" in session %}
+            <form action="/topic{{topic[0]}}" method="POST" enctype="multipart/form-data" onsubmit="return checkText(this)">
+                <input type="hidden" name="csrf" value="{{session['csrf']}}">
+                Kirjoita viesti:<br>
+                <textarea name="message" rows="5" cols="60" maxlength="500"></textarea>
+                <div id="onJS" style="display: none"><span id="text_length">0</span>/500 merkkiä</div>
+                <br>Lisää kuva:<br>
+                Tiedosto: <input type="file" name="file"><br>Tuetut kuvatiedostot: .png, .jpg, .jpeg <br>
+                {% if notSucceed %}
+                <span style="color:red">Kuvan lataus epäonnistui.</span><br>
+                {% endif %}
+                <input type="hidden" name="permission_id" value="-2">
+                <p>
+                    <input type="submit" value="Lähetä viesti">
+                </p>
+            </form>
+            {% else %}
+            <a href="/login">Kirjaudu</a>
+            tai
+            <a href="/register">rekisteröidy</a>
+            kirjoittaaksesi viestin.
+            {% endif %}
+        </p>
     </p>
-</p>
+</div>
 <script>
 
     var start_scroll_pos = document.getElementById("getPos").value
