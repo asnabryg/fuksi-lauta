@@ -401,6 +401,7 @@ def check_info():
     # Tämä metodi päivitetään, jokaisella eri sivun lataamis kerralla
     # Tarkistaa ip_osoitteen ja päivittää sen kävijöihin hashattuna, jos uusi kävijä
     # Tarkistaa milloin viimeksi käyty sivulla
+
     if "csrf" not in session:
         session["csrf"] = os.urandom(16).hex()
     user.is_admin()
@@ -420,7 +421,7 @@ def check_info():
     if "topics_per_page" not in session:
         session["topics_per_page"] = [[5, False], [10, True], [15, False], [20, False], [25, False]]
     if "sort" not in session:
-        session["sort"] = [["vanhin ensin", True], ["uusin ensin", False],
+        session["sort"] = [["vanhin ensin", False], ["uusin ensin", True],
                            ["eniten viestejä", False], ["eniten tykkäyksiä", False]]
     if "limit_offset" not in session:
         session["limit_offset"] = (0, 10)

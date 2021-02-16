@@ -10,7 +10,7 @@
     <h2>{{topic[2]}}</h2>
     {% if topic[5] != None %}
         <p>
-            <div style="width: 500px; height: 500px;">
+            <div style="width: 500px; height: 500px; display: inline;">
                 <img src="data:image/jpeg;base64,{{topic[5][1]}}" alt="{{topic[5][0]}}" style="width: inherit">
             </div>
         </p>
@@ -67,6 +67,7 @@
             <input type="submit" value="Poista lanka">
         </form>
         {% endif %}
+        <br>
         <!-- [[0:id, 1:topic_id, 2:username, 3:content, 4:(pic_name,pic_data), 5:time, 6:upvotes, 7:downvotes, 8:vote, 9:profile_pic_data]] -->
         <b>Viestit:</b> <br>
         <p>
