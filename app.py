@@ -192,7 +192,7 @@ def register():
             #ei onnistunut ja JS ei päällä, tai nimi oli jo käytössä, tai rekistöröintiä ei voitu tallentaa psql.
             if "/topic" not in session["last_page"] or "/" not in session["last_page"]:
                 session["last_page"] = "/register"
-            return render_template("error.html", page="/register", error_type="Rekisteröinti ei onnistunut :(", error_message=check[1])
+            return render_template("error.html", page="/register", error="Rekisteröinti ei onnistunut :(", error_message=check[1])
 
 
 
@@ -207,7 +207,10 @@ def profile(username):
     if not allow:
         # ei oikeutettu nähdä sivua!
         session["last_page"] = "/profile/" + username
-        return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
+        return render_template("error.html",
+                               page="/",
+                               error="Ei oikeuksia!",
+                               error_message="Et ole oikeutettu sivulle.")
 
     if request.method == "GET":
         # print("Picture:", user.getProfilePic_id(session["user"]))
@@ -334,7 +337,10 @@ def topic(id):
 def newTopic():
     check_info()
     if "user" not in session:
-        return render_template("error.html", page="/", error_type="Ei oikeuksia!", error_message="Et ole oikeutettu sivulle.")
+        return render_template("error.html",
+                               page="/",
+                               error="Ei oikeuksia!",
+                               error_message="Et ole oikeutettu sivulle.")
     if request.method == "GET":
         session["last_page"] = "/newTopic"
         return render_template("newTopic.html", notSucceed=False, topic="", info="")
@@ -342,9 +348,17 @@ def newTopic():
         check_CSRF(request.form["csrf"])
         topic = request.form["topic"]
         info = request.form["info"]
+        if topic == "" or topic == None:
+            return render_template("error.html",
+                                   page="/newTopic",
+                                   error="Langan lisäys ei onnistunut.",
+                                   error_message="Lisää otsikko keskusteluun!")
+        print(0)
         file = request.files["file"]
-        theme = request.form["theme"]
-        if theme == "unselected":
+        print(1)
+        if "theme"in request.form:
+            theme = request.form["theme"]
+        else:
             # jos JavaScript ei ole päällä, sivu ei tarkasta onko aihealue valittu
             theme = "Satunnainen"
         pic_id = None
@@ -360,7 +374,9 @@ def newTopic():
             session["last_page"] = "/newTopic"
             return redirect("/")
         else:
-            return render_template("error.html", page="/newTopic", error="Langan lisäys ei onnistunut", error_message="Yritä myöhemmin uudelleen.")
+            return render_template("error.html", page="/newTopic", error="Langan lisäys ei onnistunut.", error_message="Yritä myöhemmin uudelleen.")
+
+
 
 @app.route("/remove_message", methods=["POST"])
 def remove_message():
