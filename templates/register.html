@@ -44,6 +44,10 @@
             alert("Salasanan pitää sisältää vähintään yksi numero!")
             return false;
         }
+        if (!(/[a-zA-Z]/.test(form.password1.value))){
+            alert("Salasana ei voi koostua vain numeroista/merkeistä! Lisää kirjaimia joukkoon.")
+            return false;
+        }
         if (form.password1.value.length < 8) {
             alert("Salasana on liian lyhyt!")
             return false;

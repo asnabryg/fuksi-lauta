@@ -112,6 +112,8 @@ def checkPassword(pass1, pass2):
         return False
     if not bool(re.search(r"\d", pass1)):
         return False
+    if not bool(re.search(r"[a-zA-Z]", pass1)):
+        return False
     if len(pass1) < 8:
         return False
     return True
