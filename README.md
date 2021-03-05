@@ -1,6 +1,6 @@
 # Fuksi-lauta
-Tämä sivusto toimii Helsingin yliopiston aineopintojen Tietokantasovellus harjoitustyönä.
-Sivusto pääset testaamaan osoitteesta: https://fuksi-lauta.herokuapp.com/
+Tämä sivusto toimii Helsingin yliopiston aineopintojen Tietokantasovelluksen harjoitustyönä.
+Sivustoa pääset testaamaan osoitteesta: https://fuksi-lauta.herokuapp.com/
 
 ### Sovelluksen kuvaus:
 Tämä keskustelupalvelu tarkoitettu pääsääntöisesti yliopiston ensimmäisen vuoden opiskelijoille. Täällä voit keskustella kouluun liittyvistä asioista tai myös ihan muista aiheista.
