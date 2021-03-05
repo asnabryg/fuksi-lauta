@@ -50,7 +50,7 @@ Tämä keskustelupalvelu tarkoitettu pääsääntöisesti yliopiston ensimmäise
   - testing
 
 #### Hakutoiminto:
-- Voit etsiä tai rajata aiheita hakusanoilla. Ensins sivusto näyttää ne, jos otsikossa ollut sama sana, sen jälkeen jos aloitusviestissä ollut kyseinen sana
+- Voit etsiä tai rajata aiheita hakusanoilla. Ensin sivusto näyttää ne, jos otsikossa ollut sama sana, sen jälkeen jos aloitusviestissä ollut kyseinen sana
 - Voit rajata aihealueen perusteella esim. vain Urheiluun liittyvät aiheet
 - Voit järjestää aiheet sivustolla neljällä tavalla:
   - uusin ensin (oletus)
